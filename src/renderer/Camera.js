@@ -156,9 +156,9 @@ const Camera = (props) => {
 export default Camera;
 
 const Container = styled.div`
-  /* position: absolute; */
+  position: absolute;
   /* right: 16; */
   /* top: 16; */
-  width: 100px;
-  height: 100px;
+  /* width: 0px;
+  height: 0px; */
 `;

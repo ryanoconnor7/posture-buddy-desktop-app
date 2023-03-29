@@ -127,6 +127,7 @@ export function Broswer() {
                   overflow: 'hidden',
                   fontWeight: currentTab === i ? '500' : '400',
                   flexGrow: 1,
+                  maxLines: 1,
                 }}
               >
                 {t.replace(/^.*(:\/\/)/, '')}
