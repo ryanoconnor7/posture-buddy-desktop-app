@@ -48,8 +48,14 @@ const Camera = (props) => {
     // console.log(results);
 
     // Parse shoulders
-    const leftShoulder = results.poseLandmarks[11];
-    const rightShoulder = results.poseLandmarks[12];
+    const leftShoulder =
+      results.poseLandmarks?.length > 10
+        ? results.poseLandmarks[11]
+        : undefined;
+    const rightShoulder =
+      results.poseLandmarks?.length > 11
+        ? results.poseLandmarks[12]
+        : undefined;
 
     let result = {};
 
@@ -66,7 +72,8 @@ const Camera = (props) => {
       result.relativeDistance = diffPercent;
     }
 
-    const nose = results.poseLandmarks[0];
+    const nose =
+      results.poseLandmarks?.length > 0 ? results.poseLandmarks[0] : undefined;
     if (nose?.visibility > 0.5) {
       if (!initialNose.x) {
         initialNose.x = nose.x;

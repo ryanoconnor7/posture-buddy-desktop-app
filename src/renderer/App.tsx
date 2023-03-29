@@ -13,8 +13,9 @@ function Hello() {
   return (
     <Container
       style={{
-        // transform: `scale(${scale}, ${scale}) `,
-        transform: `translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
+        transform: `scale(${scale}, ${scale}) translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
+        // transform: `scale(${scale}, ${scale})`,
+        // transform: `translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
       }}
     >
       <Broswer />
@@ -22,6 +23,7 @@ function Hello() {
         onUpdateState={(state: any) => {
           setTransformX(state.dxPercent * -100);
           setTransformY(state.dyPercent * -100);
+          setScale(state.relativeDistance);
         }}
       />
     </Container>
