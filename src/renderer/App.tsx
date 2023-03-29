@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import styled from 'styled-components';
 import icon from '../../assets/icon.svg';
@@ -6,17 +7,23 @@ import { Broswer } from './Browser';
 import Camera from './Camera';
 
 function Hello() {
-  const scale = 0.75;
-  const transformX = 100;
-  const transformY = 100;
+  const [scale, setScale] = useState(1);
+  const [transformX, setTransformX] = useState(0);
+  const [transformY, setTransformY] = useState(0);
   return (
     <Container
       style={{
-        transform: `scale(${scale}, ${scale}) `,
+        // transform: `scale(${scale}, ${scale}) `,
+        transform: `translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
       }}
     >
       <Broswer />
-      <Camera />
+      <Camera
+        onUpdateState={(state: any) => {
+          setTransformX(state.dxPercent * -100);
+          setTransformY(state.dyPercent * -100);
+        }}
+      />
     </Container>
   );
 }

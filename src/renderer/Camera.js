@@ -6,14 +6,15 @@ import * as cam from '@mediapipe/camera_utils';
 import Webcam from 'react-webcam';
 import styled from 'styled-components';
 
-const Camera = () => {
+const Camera = (props) => {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const connect = window.drawConnectors;
   const drawLM = drawing.drawLandmarks;
   var camera = null;
 
-  let shouldWidthInitial = 0;
+  let initialShoulderWidth = 0;
+  let initialNose = { x: 0, y: 0 };
 
   function onResults(results) {
     // const video = webcamRef.current.video;
@@ -44,8 +45,42 @@ const Camera = () => {
       color: '#FF0000',
       lineWidth: 2,
     });
-    console.log(results);
+    // console.log(results);
 
+    // Parse shoulders
+    const leftShoulder = results.poseLandmarks[11];
+    const rightShoulder = results.poseLandmarks[12];
+
+    let result = {};
+
+    if (leftShoulder?.visibility > 0.5 && rightShoulder?.visibility > 0.5) {
+      const dist = Math.sqrt(
+        Math.pow(leftShoulder.x - rightShoulder.x, 2) +
+          Math.pow(leftShoulder.y - rightShoulder.y, 2)
+      );
+      if (!initialShoulderWidth) {
+        initialShoulderWidth = dist;
+      }
+
+      const diffPercent = dist / initialShoulderWidth;
+      result.relativeDistance = diffPercent;
+    }
+
+    const nose = results.poseLandmarks[0];
+    if (nose?.visibility > 0.5) {
+      if (!initialNose.x) {
+        initialNose.x = nose.x;
+        initialNose.y = nose.y;
+      }
+
+      const dxPercent = (initialNose.x - nose.x) / Math.abs(initialNose.x);
+      const dyPercent =
+        ((initialNose.y - nose.y) * -1) / Math.abs(initialNose.y);
+      result.dxPercent = dxPercent;
+      result.dyPercent = dyPercent;
+    }
+
+    props.onUpdateState(result);
     canvasCtx.restore();
   }
   // }
