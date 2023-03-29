@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import _ from 'lodash';
+import styled from 'styled-components';
 
 const HOME_PAGE = 'http://google.com';
 export function Broswer() {
@@ -44,14 +45,8 @@ export function Broswer() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
-      >
+    <Container>
+      <Header>
         <div style={{ flexGrow: 1 }}>
           <h2>PostureBuddy Browser</h2>
         </div>
@@ -102,8 +97,8 @@ export function Broswer() {
             </p>
           </div>
         </div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'row' }}>
+      </Header>
+      <Tabs>
         {tabs.map((t, i) => (
           <>
             <div
@@ -167,7 +162,7 @@ export function Broswer() {
             <p style={{ fontSize: 18, fontWeight: '600', margin: 0 }}>+</p>
           </div>
         )}
-      </div>
+      </Tabs>
 
       <div style={{}}>
         {tabs.map((url, i) => (
@@ -183,6 +178,25 @@ export function Broswer() {
           ></webview>
         ))}
       </div>
-    </div>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  width: 90vw;
+  background-color: white;
+`;
+const Header = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 16px;
+`;
+const Tabs = styled.div`
+  display: flex;
+  flex-direction: row;
+  padding: 0px 16px;
+`;
