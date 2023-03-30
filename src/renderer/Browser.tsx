@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import _ from 'lodash';
 import styled from 'styled-components';
 
 const HOME_PAGE = 'http://google.com';

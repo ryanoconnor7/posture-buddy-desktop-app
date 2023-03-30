@@ -5,11 +5,14 @@ import icon from '../../assets/icon.svg';
 import './App.css';
 import { Broswer } from './Browser';
 import Camera from './Camera';
+import Welcome from './Welcome';
 
 function Hello() {
   const [scale, setScale] = useState(1);
   const [transformX, setTransformX] = useState(0);
   const [transformY, setTransformY] = useState(0);
+  const [isOnboarding, setIsOnboarding] = useState(true);
+
   return (
     <Container
       style={
@@ -20,7 +23,17 @@ function Hello() {
         }
       }
     >
-      <Broswer />
+      {isOnboarding ? (
+        <Welcome
+          onFinish={() => {
+            setIsOnboarding(false);
+          }}
+          onCalibrate={() => {}}
+        />
+      ) : (
+        <Broswer />
+      )}
+
       <Camera
         onUpdateState={(state: any) => {
           setTransformX(state.dxPercent * -100);
