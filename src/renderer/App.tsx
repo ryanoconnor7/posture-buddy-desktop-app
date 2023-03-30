@@ -12,11 +12,13 @@ function Hello() {
   const [transformY, setTransformY] = useState(0);
   return (
     <Container
-      style={{
-        transform: `scale(${scale}, ${scale}) translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
-        // transform: `scale(${scale}, ${scale})`,
-        // transform: `translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
-      }}
+      style={
+        {
+          // transform: `scale(${scale}, ${scale}) translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
+          // transform: `scale(${scale}, ${scale})`,
+          // transform: `translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
+        }
+      }
     >
       <Broswer />
       <Camera

@@ -1,4 +1,4 @@
-import { Pose } from '@mediapipe/pose';
+import { Pose, Results } from '@mediapipe/pose';
 import React, { useRef, useEffect } from 'react';
 import * as mediapose from '@mediapipe/pose';
 import * as drawing from '@mediapipe/drawing_utils';
@@ -6,24 +6,32 @@ import * as cam from '@mediapipe/camera_utils';
 import Webcam from 'react-webcam';
 import styled from 'styled-components';
 
-const Camera = (props) => {
-  const webcamRef = useRef(null);
-  const canvasRef = useRef(null);
-  const connect = window.drawConnectors;
+interface PostureState {
+  relativeDistance?: number;
+  dxPercent?: number;
+  dyPercent?: number;
+}
+
+const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
+  const webcamRef = useRef<Webcam>(null);
+  const canvasRef = useRef<any>(null);
+  const connect = (window as any).drawConnectors;
   const drawLM = drawing.drawLandmarks;
   var camera = null;
 
   let initialShoulderWidth = 0;
   let initialNose = { x: 0, y: 0 };
 
-  function onResults(results) {
+  function onResults(results: Results) {
     // const video = webcamRef.current.video;
-    const videoWidth = webcamRef.current.video.videoWidth;
-    const videoHeight = webcamRef.current.video.videoHeight;
+    const videoWidth = webcamRef.current?.video?.videoWidth;
+    const videoHeight = webcamRef.current?.video?.videoHeight;
 
     // Set canvas width
-    canvasRef.current.width = videoWidth;
-    canvasRef.current.height = videoHeight;
+    if (canvasRef.current) {
+      canvasRef.current.width = videoWidth;
+      canvasRef.current.height = videoHeight;
+    }
 
     const canvasElement = canvasRef.current;
     const canvasCtx = canvasElement.getContext('2d');
@@ -57,9 +65,14 @@ const Camera = (props) => {
         ? results.poseLandmarks[12]
         : undefined;
 
-    let result = {};
+    let result: PostureState = {};
 
-    if (leftShoulder?.visibility > 0.5 && rightShoulder?.visibility > 0.5) {
+    if (
+      leftShoulder &&
+      (leftShoulder.visibility ?? 0 > 0.5) &&
+      rightShoulder &&
+      (rightShoulder.visibility ?? 0 > 0.5)
+    ) {
       const dist = Math.sqrt(
         Math.pow(leftShoulder.x - rightShoulder.x, 2) +
           Math.pow(leftShoulder.y - rightShoulder.y, 2)
@@ -74,7 +87,7 @@ const Camera = (props) => {
 
     const nose =
       results.poseLandmarks?.length > 0 ? results.poseLandmarks[0] : undefined;
-    if (nose?.visibility > 0.5) {
+    if (nose && (nose.visibility ?? 0 > 0.5)) {
       if (!initialNose.x) {
         initialNose.x = nose.x;
         initialNose.y = nose.y;
@@ -111,13 +124,12 @@ const Camera = (props) => {
 
     pose.onResults(onResults);
 
-    if (
-      typeof webcamRef.current !== 'undefined' &&
-      webcamRef.current !== null
-    ) {
+    if (webcamRef.current?.video) {
       camera = new cam.Camera(webcamRef.current.video, {
         onFrame: async () => {
-          await pose.send({ image: webcamRef.current.video });
+          if (webcamRef.current?.video) {
+            await pose.send({ image: webcamRef.current.video });
+          }
         },
         width: 640,
         height: 480,
@@ -138,7 +150,6 @@ const Camera = (props) => {
           left: 0,
           right: 0,
           textAlign: 'center',
-          zindex: 9,
         }}
       />{' '}
       <canvas
@@ -153,7 +164,6 @@ const Camera = (props) => {
           left: 0,
           right: 0,
           textAlign: 'center',
-          zindex: 9,
         }}
       ></canvas>
     </Container>
