@@ -10,6 +10,10 @@ interface PostureState {
   relativeDistance?: number;
   dxPercent?: number;
   dyPercent?: number;
+
+  relativeDistances?: number[]
+  dxPercents?: number[]
+  dyPercents?: number[]
 }
 
 const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
@@ -21,6 +25,20 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
 
   let initialShoulderWidth = 0;
   let initialNose = { x: 0, y: 0 };
+
+  const relDistances : number[] = [];
+  const rdlen = 30;
+  for(let i = 0; i < rdlen - 1; i++){
+    relDistances.push(1);
+  }
+  const dxPercents : number[]  = [];
+  for(let i = 0; i < rdlen - 1; i++){
+    dxPercents.push(1);
+  }
+  const dyPercents : number[]  = [];
+  for(let i = 0; i < rdlen - 1; i++){
+    dyPercents.push(1);
+  }
 
   function onResults(results: Results) {
     // const video = webcamRef.current.video;
@@ -82,6 +100,11 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
       }
 
       const diffPercent = dist / initialShoulderWidth;
+      if (relDistances.length >= rdlen){
+        relDistances.shift();
+      }
+      relDistances.push(diffPercent);
+      result.relativeDistances = relDistances;
       result.relativeDistance = diffPercent;
     }
 
@@ -98,6 +121,17 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
         ((initialNose.y - nose.y) * -1) / Math.abs(initialNose.y);
       result.dxPercent = dxPercent;
       result.dyPercent = dyPercent;
+
+      if (dxPercents.length >= rdlen){
+        dxPercents.shift();
+      }
+      if (dyPercents.length >= rdlen){
+        dyPercents.shift();
+      }
+      dxPercents.push(dxPercent);
+      dyPercents.push(dyPercent);
+      result.dxPercents = dxPercents;
+      result.dyPercents = dyPercents;
     }
 
     props.onUpdateState(result);

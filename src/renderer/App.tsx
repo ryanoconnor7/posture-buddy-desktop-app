@@ -17,7 +17,7 @@ function Hello() {
     <Container
       style={
         {
-          // transform: `scale(${scale}, ${scale}) translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
+          transform: `scale(${scale}, ${scale}) translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
           // transform: `scale(${scale}, ${scale})`,
           // transform: `translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
         }
@@ -36,9 +36,21 @@ function Hello() {
 
       <Camera
         onUpdateState={(state: any) => {
-          setTransformX(state.dxPercent * -100);
-          setTransformY(state.dyPercent * -100);
-          setScale(state.relativeDistance);
+
+          // setTransformX(state.dxPercent * -100 * 0.7);
+          // setTransformY(state.dyPercent * -100 * 0.7);
+          if(state.relativeDistances != null){
+            let rdlen = state.relativeDistances.length - 1;
+            if(Math.abs(state.dxPercents[0] - state.dxPercents[rdlen]) > 0.1){
+              setTransformX(state.dxPercents[rdlen] * -100);
+            }
+            if(Math.abs(state.dyPercents[0] - state.dyPercents[rdlen]) > 0.1){
+              setTransformY(state.dyPercents[rdlen] * -100);
+            }
+            if(Math.abs(state.relativeDistances[0] - state.relativeDistances[rdlen]) > 0.05){
+              setScale(state.relativeDistances[rdlen]);
+            }
+          }
         }}
       />
     </Container>
