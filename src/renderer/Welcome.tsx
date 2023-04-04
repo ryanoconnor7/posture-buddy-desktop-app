@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { sendMessage } from './send';
+import { sendMessage } from './Haptics';
 
 const Welcome = (props: { onFinish: () => void; onCalibrate: () => void }) => {
   const [stage, setStage] = useState(0);
 
   const nextStage = () => {
     if (stage < 1) {
-      //sendMessage()
-      setStage(stage + 1);
+      sendMessage();
+      // setStage(stage + 1);
     } else if (stage === 5) {
       props.onFinish();
     } else {
