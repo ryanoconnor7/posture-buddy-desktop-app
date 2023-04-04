@@ -185,8 +185,8 @@ export function Broswer() {
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  height: 90vh;
-  width: 90vw;
+  height: 98vh;
+  width: 96vw;
   background-color: white;
 `;
 const Header = styled.div`

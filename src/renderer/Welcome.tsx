@@ -7,8 +7,8 @@ const Welcome = (props: { onFinish: () => void; onCalibrate: () => void }) => {
 
   const nextStage = () => {
     if (stage < 1) {
-      sendMessage()
-      //setStage(stage + 1);
+      //sendMessage()
+      setStage(stage + 1);
     } else if (stage === 5) {
       props.onFinish();
     } else {

@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import icon from '../../assets/icon.svg';
 import './App.css';
 import { Broswer } from './Browser';
-import Camera from './Camera';
+import { Camera, calibrate } from './Camera';
 import Welcome from './Welcome';
 
 function Hello() {
@@ -16,11 +16,12 @@ function Hello() {
   return (
     <Container
       style={
+        !isOnboarding ?
         {
           transform: `scale(${scale}, ${scale}) translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
-          // transform: `scale(${scale}, ${scale})`,
-          // transform: `translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
-        }
+          //transform: `scale(${scale}, ${scale})`,
+          //transform: `translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
+        } : undefined
       }
     >
       {isOnboarding ? (
@@ -28,7 +29,9 @@ function Hello() {
           onFinish={() => {
             setIsOnboarding(false);
           }}
-          onCalibrate={() => {}}
+          onCalibrate={() => {
+            calibrate();
+          }}
         />
       ) : (
         <Broswer />
@@ -37,8 +40,8 @@ function Hello() {
       <Camera
         onUpdateState={(state: any) => {
 
-          // setTransformX(state.dxPercent * -100 * 0.7);
-          // setTransformY(state.dyPercent * -100 * 0.7);
+          //setTransformX(state.dxPercent * -100 * 0.7);
+          //setTransformY(state.dyPercent * -100 * 0.7);
           if(state.relativeDistances != null){
             let rdlen = state.relativeDistances.length - 1;
             if(Math.abs(state.dxPercents[0] - state.dxPercents[rdlen]) > 0.1){
@@ -52,6 +55,8 @@ function Hello() {
             }
           }
         }}
+
+
       />
     </Container>
   );

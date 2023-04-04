@@ -1,4 +1,5 @@
-import { Pose, Results } from '@mediapipe/pose';
+import { Pose, Results, LandmarkList } from '@mediapipe/pose';
+import { useState } from 'react';
 import React, { useRef, useEffect } from 'react';
 import * as mediapose from '@mediapipe/pose';
 import * as drawing from '@mediapipe/drawing_utils';
@@ -16,21 +17,60 @@ interface PostureState {
   dyPercents?: number[]
 }
 
+interface InitialPose {
+  calibreated: boolean;
+  landmarks?: LandmarkList;
+  shoulderWidth: number;
+  noseX: number;
+  noseY: number;
+}
+
+let initialPose: InitialPose = {
+  calibreated: false,
+  landmarks: undefined,
+  shoulderWidth: 0,
+  noseX: 0,
+  noseY: 0
+}
+
+const handleCalibrate = function (results: Results) {
+  initialPose.landmarks = results.poseLandmarks;
+  initialPose.shoulderWidth = Math.sqrt(
+    Math.pow(results.poseLandmarks[11].x - results.poseLandmarks[12].x, 2) +
+      Math.pow(results.poseLandmarks[11].y - results.poseLandmarks[12].y, 2)
+  );
+  initialPose.noseX = results.poseLandmarks[0].x;
+  initialPose.noseY = results.poseLandmarks[0].y;
+
+
+  initialPose.calibreated = true;
+}
+
+const calibrate = function () {
+  initialPose.calibreated = false;
+}
+
+const initRelDistances = (relDistances: number[], rdLen: number) => {
+  relDistances = []
+  for(let i = 0; i < rdLen - 1; i++){
+    relDistances.push(1);
+  }
+}
+
 const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<any>(null);
   const connect = (window as any).drawConnectors;
   const drawLM = drawing.drawLandmarks;
-  var camera = null;
+    var camera = null;
 
-  let initialShoulderWidth = 0;
-  let initialNose = { x: 0, y: 0 };
+  // let initialShoulderWidth = 0;
+  // let initialNose = { x: 0, y: 0 };
 
   const relDistances : number[] = [];
   const rdlen = 30;
-  for(let i = 0; i < rdlen - 1; i++){
-    relDistances.push(1);
-  }
+  initRelDistances(relDistances, rdlen)
+
   const dxPercents : number[]  = [];
   for(let i = 0; i < rdlen - 1; i++){
     dxPercents.push(1);
@@ -73,6 +113,11 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
     });
     // console.log(results);
 
+    if (!initialPose.calibreated) {
+      initRelDistances(relDistances, rdlen)
+      handleCalibrate(results);
+    }
+
     // Parse shoulders
     const leftShoulder =
       results.poseLandmarks?.length > 10
@@ -95,11 +140,9 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
         Math.pow(leftShoulder.x - rightShoulder.x, 2) +
           Math.pow(leftShoulder.y - rightShoulder.y, 2)
       );
-      if (!initialShoulderWidth) {
-        initialShoulderWidth = dist;
-      }
 
-      const diffPercent = dist / initialShoulderWidth;
+
+      const diffPercent = dist / initialPose.shoulderWidth;
       if (relDistances.length >= rdlen){
         relDistances.shift();
       }
@@ -111,14 +154,10 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
     const nose =
       results.poseLandmarks?.length > 0 ? results.poseLandmarks[0] : undefined;
     if (nose && (nose.visibility ?? 0 > 0.5)) {
-      if (!initialNose.x) {
-        initialNose.x = nose.x;
-        initialNose.y = nose.y;
-      }
 
-      const dxPercent = (initialNose.x - nose.x) / Math.abs(initialNose.x);
+      const dxPercent = (initialPose.noseX - nose.x) / Math.abs(initialPose.noseX);
       const dyPercent =
-        ((initialNose.y - nose.y) * -1) / Math.abs(initialNose.y);
+        ((initialPose.noseY - nose.y) * -1) / Math.abs(initialPose.noseY);
       result.dxPercent = dxPercent;
       result.dyPercent = dyPercent;
 
@@ -204,7 +243,10 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
   );
 };
 
-export default Camera;
+
+
+
+export {Camera, calibrate};
 
 const Container = styled.div`
   position: absolute;
