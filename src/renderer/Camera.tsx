@@ -7,14 +7,15 @@ import * as cam from '@mediapipe/camera_utils';
 import Webcam from 'react-webcam';
 import styled from 'styled-components';
 
-interface PostureState {
+export interface PostureState {
   relativeDistance?: number;
   dxPercent?: number;
   dyPercent?: number;
 
-  relativeDistances?: number[]
-  dxPercents?: number[]
-  dyPercents?: number[]
+  relativeDistances?: number[];
+  dxPercents?: number[];
+  dyPercents?: number[];
+  results?: Results;
 }
 
 interface InitialPose {
@@ -30,8 +31,8 @@ let initialPose: InitialPose = {
   landmarks: undefined,
   shoulderWidth: 0,
   noseX: 0,
-  noseY: 0
-}
+  noseY: 0,
+};
 
 const handleCalibrate = function (results: Results) {
   initialPose.landmarks = results.poseLandmarks;
@@ -42,41 +43,40 @@ const handleCalibrate = function (results: Results) {
   initialPose.noseX = results.poseLandmarks[0].x;
   initialPose.noseY = results.poseLandmarks[0].y;
 
-
   initialPose.calibreated = true;
-}
+};
 
 const calibrate = function () {
   initialPose.calibreated = false;
-}
+};
 
 const initRelDistances = (relDistances: number[], rdLen: number) => {
-  relDistances = []
-  for(let i = 0; i < rdLen - 1; i++){
+  relDistances = [];
+  for (let i = 0; i < rdLen - 1; i++) {
     relDistances.push(1);
   }
-}
+};
 
 const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<any>(null);
   const connect = (window as any).drawConnectors;
   const drawLM = drawing.drawLandmarks;
-    var camera = null;
+  var camera = null;
 
   // let initialShoulderWidth = 0;
   // let initialNose = { x: 0, y: 0 };
 
-  const relDistances : number[] = [];
+  const relDistances: number[] = [];
   const rdlen = 30;
-  initRelDistances(relDistances, rdlen)
+  initRelDistances(relDistances, rdlen);
 
-  const dxPercents : number[]  = [];
-  for(let i = 0; i < rdlen - 1; i++){
+  const dxPercents: number[] = [];
+  for (let i = 0; i < rdlen - 1; i++) {
     dxPercents.push(1);
   }
-  const dyPercents : number[]  = [];
-  for(let i = 0; i < rdlen - 1; i++){
+  const dyPercents: number[] = [];
+  for (let i = 0; i < rdlen - 1; i++) {
     dyPercents.push(1);
   }
 
@@ -114,7 +114,7 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
     // console.log(results);
 
     if (!initialPose.calibreated) {
-      initRelDistances(relDistances, rdlen)
+      initRelDistances(relDistances, rdlen);
       handleCalibrate(results);
     }
 
@@ -128,7 +128,9 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
         ? results.poseLandmarks[12]
         : undefined;
 
-    let result: PostureState = {};
+    let result: PostureState = {
+      results,
+    };
 
     if (
       leftShoulder &&
@@ -141,9 +143,8 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
           Math.pow(leftShoulder.y - rightShoulder.y, 2)
       );
 
-
       const diffPercent = dist / initialPose.shoulderWidth;
-      if (relDistances.length >= rdlen){
+      if (relDistances.length >= rdlen) {
         relDistances.shift();
       }
       relDistances.push(diffPercent);
@@ -154,17 +155,17 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
     const nose =
       results.poseLandmarks?.length > 0 ? results.poseLandmarks[0] : undefined;
     if (nose && (nose.visibility ?? 0 > 0.5)) {
-
-      const dxPercent = (initialPose.noseX - nose.x) / Math.abs(initialPose.noseX);
+      const dxPercent =
+        (initialPose.noseX - nose.x) / Math.abs(initialPose.noseX);
       const dyPercent =
         ((initialPose.noseY - nose.y) * -1) / Math.abs(initialPose.noseY);
       result.dxPercent = dxPercent;
       result.dyPercent = dyPercent;
 
-      if (dxPercents.length >= rdlen){
+      if (dxPercents.length >= rdlen) {
         dxPercents.shift();
       }
-      if (dyPercents.length >= rdlen){
+      if (dyPercents.length >= rdlen) {
         dyPercents.shift();
       }
       dxPercents.push(dxPercent);
@@ -243,10 +244,7 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
   );
 };
 
-
-
-
-export {Camera, calibrate};
+export { Camera, calibrate };
 
 const Container = styled.div`
   position: absolute;

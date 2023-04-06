@@ -170,8 +170,8 @@ export function Broswer() {
             style={{
               position: 'absolute',
               opacity: currentTab === i ? 1 : 0,
-              height: '85%',
-              width: '100%',
+              height: '88.5%',
+              width: '99.25%',
             }}
             src={url}
             id="webview"
@@ -186,7 +186,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 98vh;
-  width: 96vw;
+  width: 99.25vw;
   background-color: white;
 `;
 const Header = styled.div`
