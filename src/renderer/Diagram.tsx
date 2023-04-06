@@ -46,10 +46,12 @@ const Diagram = (props: {
 
   useEffect(() => {
     let newPostureClass: PostureClass = 'good';
+    let scale_sensitivity = 2
+    let scale_error = scale_sensitivity * (Math.abs(scale*100) - 100)
     const errorRate = Math.max(
       Math.abs(transformX),
       Math.abs(transformY),
-      Math.abs(scale / 100)
+      Math.abs(scale_error)
     );
     if (errorRate > 25) {
       newPostureClass = 'bad';
