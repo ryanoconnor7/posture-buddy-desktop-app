@@ -6,6 +6,7 @@ import * as drawing from '@mediapipe/drawing_utils';
 import * as cam from '@mediapipe/camera_utils';
 import Webcam from 'react-webcam';
 import styled from 'styled-components';
+import { SHOW_CAMERA } from './App';
 
 export interface PostureState {
   relativeDistance?: number;
@@ -212,7 +213,7 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
     }
   }, []);
   return (
-    <Container>
+    <Container style={{ opacity: SHOW_CAMERA ? 1 : 0 }}>
       <Webcam
         ref={webcamRef}
         style={{
@@ -248,8 +249,10 @@ export { Camera, calibrate };
 
 const Container = styled.div`
   position: absolute;
-  /* right: 16; */
-  /* top: 16; */
-  /* width: 0px;
-  height: 0px; */
+  bottom: 16px;
+  left: 16px;
+  height: 160px;
+  aspect-ratio: 4/3;
+  border-radius: 24px;
+  overflow: hidden;
 `;

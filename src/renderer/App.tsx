@@ -8,6 +8,8 @@ import { Camera, PostureState, calibrate } from './Camera';
 import Welcome from './Welcome';
 import Diagram, { PostureClass } from './Diagram';
 
+export const SHOW_CAMERA = true;
+
 function Hello() {
   const [scale, setScale] = useState(1);
   const [transformX, setTransformX] = useState(0);
