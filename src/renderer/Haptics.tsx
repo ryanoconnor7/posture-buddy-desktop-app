@@ -1,20 +1,18 @@
-import SerialPort from 'serialport';
+const HAPTICS_HOST = 'http://localhost:8888';
 
-export function sendMessage() {
-  var port = 'COM12';
-  var message = 'H';
+// Motor: [1, n]
+// Power [1, 100]
+export async function sendMessage(motor: number, power: number) {
+  const action = `control?motor=${motor}&power=${power}`;
+  const url = `${HAPTICS_HOST}/${action}`;
 
-  const serialPort = new SerialPort(port, {
-    baudRate: 9600,
-    dataBits: 8,
-    stopBits: 1,
-    parity: 'none',
-  });
-
-  serialPort.write(message, function (err) {
-    if (err) {
-      return console.log('Error on write: ', err.message);
-    }
-    console.log('Message sent successfully');
-  });
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+    });
+    const data = await res.text();
+    console.log('Haptic action', action, 'response:', res, ', data:', data);
+  } catch (e) {
+    console.log('Haptic action', action, 'failed with error:', e);
+  }
 }
