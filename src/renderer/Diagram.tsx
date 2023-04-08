@@ -5,9 +5,11 @@ import { TransitionGroup } from 'react-transition-group';
 import { useEffect, useState } from 'react';
 import moment from 'moment';
 import { transitionCSS } from './Utils';
-import { HapticsAction, sendMessage } from './Haptics';
+import { sendMessage, updateHaptics } from './Haptics';
 
 export type PostureClass = 'good' | 'fair' | 'bad';
+export const FAIR_ERROR_RATE = 12.5;
+export const BAD_ERROR_RATE = 25;
 
 interface Posture {
   class: PostureClass;
@@ -54,11 +56,18 @@ const Diagram = (props: {
       Math.abs(transformY),
       Math.abs(scale_error)
     );
-    if (errorRate > 25) {
+    if (errorRate > BAD_ERROR_RATE) {
       newPostureClass = 'bad';
-    } else if (errorRate > 12.5) {
+    } else if (errorRate > FAIR_ERROR_RATE) {
       newPostureClass = 'fair';
     }
+
+    updateHaptics({
+      transformX,
+      transformY,
+      scale,
+      postureClass: newPostureClass,
+    });
 
     // Make copy of posture state
     let newPosture: Posture = { ...posture };
@@ -66,8 +75,6 @@ const Diagram = (props: {
       newPosture.colorClass = newPostureClass;
 
     if (newPostureClass !== posture.candidateClass) {
-      sendMessage(0, 50);
-
       newPosture.candidateClass = newPostureClass;
       newPosture.timestamp = moment().unix();
     } else if (newPostureClass !== posture.class) {
