@@ -10,6 +10,10 @@ import { sendMessage, updateHaptics } from './Haptics';
 export type PostureClass = 'good' | 'fair' | 'bad';
 export const FAIR_ERROR_RATE = 12.5;
 export const BAD_ERROR_RATE = 25;
+export {lastPostureClass, curPostureClass};
+
+let lastPostureClass:string = 'good';
+let curPostureClass:string = 'good';
 
 interface Posture {
   class: PostureClass;
@@ -62,6 +66,8 @@ const Diagram = (props: {
       newPostureClass = 'fair';
     }
 
+    lastPostureClass = curPostureClass;
+    curPostureClass = newPostureClass;
     updateHaptics({
       transformX,
       transformY,

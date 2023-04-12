@@ -7,6 +7,9 @@ import { Broswer } from './Browser';
 import { Camera, PostureState, calibrate } from './Camera';
 import Welcome from './Welcome';
 import Diagram, { PostureClass } from './Diagram';
+import {startTime, CSVdata} from './Output';
+import { ExportToCsv } from 'export-to-csv';
+
 
 export const SHOW_CAMERA = true;
 
@@ -18,10 +21,6 @@ function Hello() {
   const [postureState, setPostureState] = useState<PostureState | undefined>(
     undefined
   );
-
-  // useEffect(() => {
-  //   calibrate();
-  // }, []);
 
   return (
     <Container
@@ -43,6 +42,7 @@ function Hello() {
           }}
           onCalibrate={() => {
             calibrate();
+            startTime();
           }}
         />
       ) : (
@@ -91,11 +91,15 @@ function Hello() {
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Hello />} />
-      </Routes>
-    </Router>
+    <div>
+      <button onClick={event => csvReady()}>DownloadCSV</button>
+      <button onClick={event => calibrate()}>Calibrate</button>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Hello />} />
+          </Routes>
+        </Router>
+    </div>
   );
 }
 
@@ -105,3 +109,21 @@ const Container = styled.div`
   width: 97vw;
   transition: opacity 500ms ease-in;
 `;
+
+const options = {
+  fieldSeparator: ',',
+  quoteStrings: '"',
+  decimalSeparator: '.',
+  showLabels: true,
+  showTitle: false,
+  title: 'Test Data',
+  useTextFile: false,
+  useBom: true,
+  useKeysAsHeaders: true,
+  // headers: ['Column 1', 'Column 2', etc...] <-- Won't work with useKeysAsHeaders present!
+};
+
+const csvReady = function() {
+  const csvExporter = new ExportToCsv(options);
+  csvExporter.generateCsv(CSVdata);
+}

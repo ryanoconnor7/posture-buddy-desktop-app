@@ -7,6 +7,8 @@ import * as cam from '@mediapipe/camera_utils';
 import Webcam from 'react-webcam';
 import styled from 'styled-components';
 import { SHOW_CAMERA } from './App';
+import {addData} from './Output';
+import { lastPostureClass, curPostureClass} from './Diagram';
 
 export interface PostureState {
   relativeDistance?: number;
@@ -43,10 +45,11 @@ const handleCalibrate = function (results: Results) {
   );
   initialPose.noseX = results.poseLandmarks[0].x;
   initialPose.noseY = results.poseLandmarks[0].y;
-
+  addData("Calbration", results.poseLandmarks);
   initialPose.calibreated = true;
 };
 
+//to enable calibration in App.tsx
 const calibrate = function () {
   initialPose.calibreated = false;
 };
@@ -175,6 +178,10 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
       result.dyPercents = dyPercents;
     }
 
+    if(curPostureClass !== lastPostureClass) {
+      addData(curPostureClass, results.poseLandmarks);
+    }
+
     props.onUpdateState(result);
     canvasCtx.restore();
   }
@@ -245,7 +252,7 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
   );
 };
 
-export { Camera, calibrate };
+export { Camera, calibrate};
 
 const Container = styled.div`
   position: absolute;
