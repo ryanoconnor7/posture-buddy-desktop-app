@@ -7,7 +7,7 @@ import { Broswer } from './Browser';
 import { Camera, PostureState, calibrate } from './Camera';
 import Welcome from './Welcome';
 import Diagram, { PostureClass } from './Diagram';
-import {startTime, CSVdata} from './Output';
+import {startTime, toggleControl, CSVdata} from './Output';
 import { ExportToCsv } from 'export-to-csv';
 
 
@@ -94,6 +94,7 @@ export default function App() {
     <div>
       <button onClick={event => csvReady()}>DownloadCSV</button>
       <button onClick={event => calibrate()}>Calibrate</button>
+      <button onClick={event => toggleControl()}>Toggle Control</button>
       <Router>
         <Routes>
           <Route path="/" element={<Hello />} />
