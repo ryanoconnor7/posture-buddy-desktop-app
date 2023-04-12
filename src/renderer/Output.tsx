@@ -1,43 +1,104 @@
-import {NormalizedLandmarkList} from '@mediapipe/pose';
+import { NormalizedLandmarkList } from '@mediapipe/pose';
 
-export {addData, startTime, toggleControl, CSVdata}
+export { addData, startTime, toggleControl, CSVdata };
+import { ExportToCsv } from 'export-to-csv';
+import { InterventionMode } from './App';
 
-let CSVdata: postureInstance [] = [];
+let CSVdata: postureInstance[] = [];
 let start = Date.now();
-let isControl: boolean = true;
+let isControl = false;
 
-interface postureInstance { Control?:boolean, Reason?: string, Time?: number,
-  ZeroX?: number, ZeroY?: number, ZeroZ?: number, ZeroVis?: number
-  OneX?: number, OneY?: number, OneZ?: number, OneVis?: number,
-  TwoX?: number, TwoY?: number, TwoZ?: number, TwoVis?: number,
-  ThreeX?: number, ThreeY?: number, ThreeZ?: number, ThreeVis?: number,
-  FourX?: number, FourY?: number, FourZ?: number, FourVis?: number,
-  FiveX?: number, FiveY?: number, FiveZ?: number, FiveVis?: number,
-  SixX?: number, SixY?: number, SixZ?: number, SixVis?: number,
-  SevenX?: number, SevenY?: number, SevenZ?: number, SevenVis?: number,
-  EightX?: number, EightY?: number, EightZ?: number, EightVis?: number,
-  NineX?: number, NineY?: number, NineZ?: number, NineVis?: number,
-  TenX?: number, TenY?: number, TenZ?: number, TenVis?: number,
-  ElevenX?: number, ElevenY?: number, ElevenZ?: number, ElevenVis?: number,
-  TwelveX?: number, TwelveY?: number, TwelveZ?: number, TwelveVis?: number,
-  ThirteenX?: number, ThirteenY?: number, ThirteenZ?: number, ThirteenVis?: number,
-  FourteenX?: number, FourteenY?: number, FourteenZ?: number, FourteenVis?: number,
-  FifteenX?: number, FifteenY?: number, FifteenZ?: number, FifteenVis?: number,
-  SixteenX?: number, SixteenY?: number, SixteenZ?: number, SixteenVis?: number,
+interface postureInstance {
+  Control?: string;
+  Reason?: string;
+  Time?: number;
+  ZeroX?: number;
+  ZeroY?: number;
+  ZeroZ?: number;
+  ZeroVis?: number;
+  OneX?: number;
+  OneY?: number;
+  OneZ?: number;
+  OneVis?: number;
+  TwoX?: number;
+  TwoY?: number;
+  TwoZ?: number;
+  TwoVis?: number;
+  ThreeX?: number;
+  ThreeY?: number;
+  ThreeZ?: number;
+  ThreeVis?: number;
+  FourX?: number;
+  FourY?: number;
+  FourZ?: number;
+  FourVis?: number;
+  FiveX?: number;
+  FiveY?: number;
+  FiveZ?: number;
+  FiveVis?: number;
+  SixX?: number;
+  SixY?: number;
+  SixZ?: number;
+  SixVis?: number;
+  SevenX?: number;
+  SevenY?: number;
+  SevenZ?: number;
+  SevenVis?: number;
+  EightX?: number;
+  EightY?: number;
+  EightZ?: number;
+  EightVis?: number;
+  NineX?: number;
+  NineY?: number;
+  NineZ?: number;
+  NineVis?: number;
+  TenX?: number;
+  TenY?: number;
+  TenZ?: number;
+  TenVis?: number;
+  ElevenX?: number;
+  ElevenY?: number;
+  ElevenZ?: number;
+  ElevenVis?: number;
+  TwelveX?: number;
+  TwelveY?: number;
+  TwelveZ?: number;
+  TwelveVis?: number;
+  ThirteenX?: number;
+  ThirteenY?: number;
+  ThirteenZ?: number;
+  ThirteenVis?: number;
+  FourteenX?: number;
+  FourteenY?: number;
+  FourteenZ?: number;
+  FourteenVis?: number;
+  FifteenX?: number;
+  FifteenY?: number;
+  FifteenZ?: number;
+  FifteenVis?: number;
+  SixteenX?: number;
+  SixteenY?: number;
+  SixteenZ?: number;
+  SixteenVis?: number;
   // SeventeenX?: number, SeventeenY?: number, SeventeenZ?: number, SeventeenVis?: number,
   // EightteenX?: number, EightteenY?: number, EightteenZ?: number, EightteenVis?: number,
   // NineteenX?: number, NineteenY?: number, NineteenZ?: number, NineteenVis?: number,
   // TwentyX?: number, TwentyY?: number, TwentyZ?: number, TwentyVis?: number,
   // TwentyOneX?: number, TwentyOneY?: number, TwentyOneZ?: number, TwentyOneVis?: number,
   // TwentyTwoX?: number, TwentyTwoY?: number, TwentyTwoZ?: number, TwentyTwoVis?: number,
-  TwentyThreeX?: number, TwentyThreeY?: number, TwentyThreeZ?: number, TwentyThreeVis?: number,
-  TwentyFourX?: number, TwentyFourY?: number, TwentyFourZ?: number, TwentyFourVis?: number,
-  }
+  TwentyThreeX?: number;
+  TwentyThreeY?: number;
+  TwentyThreeZ?: number;
+  TwentyThreeVis?: number;
+  TwentyFourX?: number;
+  TwentyFourY?: number;
+  TwentyFourZ?: number;
+  TwentyFourVis?: number;
+}
 
-  const startTime = function() {
-    start = Date.now();
-  }
-
+const startTime = function () {
+  start = Date.now();
+};
 
 // const makePostInstance = function (line:number[], reason:string) {
 //   if(line.length < 100){
@@ -75,46 +136,125 @@ interface postureInstance { Control?:boolean, Reason?: string, Time?: number,
 //   return formattedLine;
 // }
 
-const toggleControl = function(){
-  if(isControl){
+const toggleControl = function () {
+  if (isControl) {
     isControl = false;
   } else {
     isControl = true;
   }
-}
+};
 
-const addData = function (reason:string, pose:NormalizedLandmarkList) {
+const addData = function (
+  reason: string,
+  mode: InterventionMode,
+  pose: NormalizedLandmarkList
+) {
   let line: postureInstance = {
-    Control: isControl, Reason: reason, Time: (Date.now() - start),
-    ZeroX: pose[0].x, ZeroY: pose[0].y, ZeroZ: pose[0].z, ZeroVis: pose[0].visibility,
-    OneX: pose[1].x, OneY: pose[1].y, OneZ: pose[1].z, OneVis: pose[1].visibility,
-    TwoX: pose[2].x, TwoY: pose[2].y, TwoZ: pose[2].z, TwoVis: pose[2].visibility,
-    ThreeX: pose[3].x, ThreeY: pose[3].y, ThreeZ: pose[3].z, ThreeVis: pose[3].visibility,
-    FourX: pose[4].x, FourY: pose[4].y, FourZ: pose[4].z, FourVis: pose[4].visibility,
-    FiveX: pose[5].x, FiveY: pose[5].y, FiveZ: pose[5].z, FiveVis: pose[5].visibility,
-    SixX: pose[6].x, SixY: pose[6].y, SixZ: pose[6].z, SixVis: pose[6].visibility,
-    SevenX: pose[7].x, SevenY: pose[7].y, SevenZ: pose[7].z, SevenVis: pose[7].visibility,
-    EightX: pose[8].x, EightY: pose[8].y, EightZ: pose[8].z, EightVis: pose[8].visibility,
-    NineX: pose[9].x, NineY: pose[9].y, NineZ: pose[9].z, NineVis: pose[9].visibility,
-    TenX: pose[10].x, TenY: pose[10].y, TenZ: pose[10].z, TenVis: pose[10].visibility,
-    ElevenX: pose[11].x, ElevenY: pose[11].y, ElevenZ: pose[11].z, ElevenVis: pose[11].visibility,
-    TwelveX: pose[12].x, TwelveY: pose[12].y, TwelveZ: pose[12].z, TwelveVis: pose[12].visibility,
-    ThirteenX: pose[13].x, ThirteenY: pose[13].y, ThirteenZ: pose[13].z, ThirteenVis: pose[13].visibility,
-    FourteenX: pose[14].x, FourteenY: pose[14].y, FourteenZ: pose[14].z, FourteenVis: pose[14].visibility,
-    FifteenX: pose[15].x, FifteenY: pose[15].y, FifteenZ: pose[15].z, FifteenVis: pose[15].visibility,
-    SixteenX: pose[16].x, SixteenY: pose[16].y, SixteenZ: pose[16].z, SixteenVis: pose[16].visibility,
+    Control: mode,
+    Reason: reason,
+    Time: Date.now() - start,
+    ZeroX: pose[0].x,
+    ZeroY: pose[0].y,
+    ZeroZ: pose[0].z,
+    ZeroVis: pose[0].visibility,
+    OneX: pose[1].x,
+    OneY: pose[1].y,
+    OneZ: pose[1].z,
+    OneVis: pose[1].visibility,
+    TwoX: pose[2].x,
+    TwoY: pose[2].y,
+    TwoZ: pose[2].z,
+    TwoVis: pose[2].visibility,
+    ThreeX: pose[3].x,
+    ThreeY: pose[3].y,
+    ThreeZ: pose[3].z,
+    ThreeVis: pose[3].visibility,
+    FourX: pose[4].x,
+    FourY: pose[4].y,
+    FourZ: pose[4].z,
+    FourVis: pose[4].visibility,
+    FiveX: pose[5].x,
+    FiveY: pose[5].y,
+    FiveZ: pose[5].z,
+    FiveVis: pose[5].visibility,
+    SixX: pose[6].x,
+    SixY: pose[6].y,
+    SixZ: pose[6].z,
+    SixVis: pose[6].visibility,
+    SevenX: pose[7].x,
+    SevenY: pose[7].y,
+    SevenZ: pose[7].z,
+    SevenVis: pose[7].visibility,
+    EightX: pose[8].x,
+    EightY: pose[8].y,
+    EightZ: pose[8].z,
+    EightVis: pose[8].visibility,
+    NineX: pose[9].x,
+    NineY: pose[9].y,
+    NineZ: pose[9].z,
+    NineVis: pose[9].visibility,
+    TenX: pose[10].x,
+    TenY: pose[10].y,
+    TenZ: pose[10].z,
+    TenVis: pose[10].visibility,
+    ElevenX: pose[11].x,
+    ElevenY: pose[11].y,
+    ElevenZ: pose[11].z,
+    ElevenVis: pose[11].visibility,
+    TwelveX: pose[12].x,
+    TwelveY: pose[12].y,
+    TwelveZ: pose[12].z,
+    TwelveVis: pose[12].visibility,
+    ThirteenX: pose[13].x,
+    ThirteenY: pose[13].y,
+    ThirteenZ: pose[13].z,
+    ThirteenVis: pose[13].visibility,
+    FourteenX: pose[14].x,
+    FourteenY: pose[14].y,
+    FourteenZ: pose[14].z,
+    FourteenVis: pose[14].visibility,
+    FifteenX: pose[15].x,
+    FifteenY: pose[15].y,
+    FifteenZ: pose[15].z,
+    FifteenVis: pose[15].visibility,
+    SixteenX: pose[16].x,
+    SixteenY: pose[16].y,
+    SixteenZ: pose[16].z,
+    SixteenVis: pose[16].visibility,
     //SeventeenX: pose[].x, SeventeenY: pose[, SeventeenZ: pose[].z, SeventeenVis: pose[].visibility,
     //EightteenX: pose[].x, EightteenY: pose[, EightteenZ: pose[].z, EightteenVis: pose[].visibility,
     //NineteenX: pose[].x, NineteenY: pose[, NineteenZ: pose[].z, NineteenVis: pose[].visibility,
     //TwentyX: pose[].x, TwentyY: pose[, TwentyZ: pose[].z, TwentyVis: pose[].visibility,
     //TwentyOneX: pose[].x, TwentyOneY: pose[, TwentyOneZ: pose[].z, TwentyOneVis: pose[].visibility,
     //TwentyTwoX: pose[].x, TwentyTwoY: pose[, TwentyTwoZ: pose[].z, TwentyTwoVis: pose[].visibility,
-    TwentyThreeX: pose[23].x, TwentyThreeY: pose[23].y, TwentyThreeZ: pose[23].z, TwentyThreeVis: pose[23].visibility,
-    TwentyFourX: pose[24].x, TwentyFourY: pose[24].y, TwentyFourZ: pose[24].z, TwentyFourVis: pose[24].visibility,
-  }
-  if(line !== undefined){
+    TwentyThreeX: pose[23].x,
+    TwentyThreeY: pose[23].y,
+    TwentyThreeZ: pose[23].z,
+    TwentyThreeVis: pose[23].visibility,
+    TwentyFourX: pose[24].x,
+    TwentyFourY: pose[24].y,
+    TwentyFourZ: pose[24].z,
+    TwentyFourVis: pose[24].visibility,
+  };
+  if (line !== undefined) {
     CSVdata.push(line);
   }
-}
+};
 
+const options = {
+  fieldSeparator: ',',
+  quoteStrings: '"',
+  decimalSeparator: '.',
+  showLabels: true,
+  showTitle: false,
+  title: 'Test Data',
+  useTextFile: false,
+  useBom: true,
+  useKeysAsHeaders: true,
+  // headers: ['Column 1', 'Column 2', etc...] <-- Won't work with useKeysAsHeaders present!
+};
 
+export const csvReady = function () {
+  const csvExporter = new ExportToCsv(options);
+  csvExporter.generateCsv(CSVdata);
+};

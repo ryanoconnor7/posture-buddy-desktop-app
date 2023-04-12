@@ -82,7 +82,7 @@ const Content = styled.div`
   flex-grow: 1;
   margin-bottom: 18%;
 `;
-const PostureBuddyLogo = styled.h2`
+export const PostureBuddyLogo = styled.h2`
   background: linear-gradient(0.25turn, #e66465, 25%, #9198e5);
   background-clip: text;
   -webkit-background-clip: text;

@@ -1,21 +1,27 @@
 import { useState } from 'react';
 import styled from 'styled-components';
+import { csvReady, toggleControl } from './Output';
+import { calibrate } from './Camera';
+import { PostureBuddyLogo } from './Welcome';
+import { InterventionMode } from './App';
+import _ from 'lodash';
+import IonIcon from '@reacticons/ionicons';
+import { formatUrl } from './Utils';
 
 const HOME_PAGE = 'http://google.com';
-export function Broswer() {
+
+const MODES: InterventionMode[] = ['auto', 'off', 'visual', 'haptic', 'all'];
+export function Broswer(props: {
+  mode: InterventionMode;
+  setMode: (m: InterventionMode) => void;
+  showStats: () => void;
+}) {
   const [searchBarText, setSearchBarText] = useState('');
   const [tabs, setTabs] = useState<string[]>([HOME_PAGE]);
   const [currentTab, setCurrentTab] = useState(0);
   const search = () => {
     const newTabs = tabs.slice();
-    if (searchBarText.includes('://')) {
-      newTabs[currentTab] = searchBarText;
-    } else if (!searchBarText.includes(' ') && searchBarText.includes('.')) {
-      newTabs[currentTab] = 'https://' + searchBarText;
-    } else {
-      newTabs[currentTab] =
-        'http://google.com/search?q=' + encodeURIComponent(searchBarText);
-    }
+    newTabs[currentTab] = formatUrl(searchBarText);
 
     console.log('new tabs:', newTabs);
 
@@ -46,9 +52,8 @@ export function Broswer() {
   return (
     <Container>
       <Header>
-        <div style={{ flexGrow: 1 }}>
-          <h2>PostureBuddy Browser</h2>
-        </div>
+        <PostureBuddyLogo>PostureBuddy Browser</PostureBuddyLogo>
+        <div style={{ flexGrow: 1 }} />
         <div
           style={{
             flexDirection: 'row',
@@ -77,25 +82,46 @@ export function Broswer() {
               if (e.key === 'Enter') search();
             }}
           />
-          <div
+          <Button
+            className="btn"
             style={{
-              backgroundColor: '#007aff',
-              borderRadius: 8,
               marginLeft: -66,
             }}
           >
-            <p
-              style={{
-                fontWeight: '500',
-                fontSize: 16,
-                margin: 4,
-                color: 'white',
-              }}
-            >
-              Search
-            </p>
-          </div>
+            Search
+          </Button>
         </div>
+        <div style={{ flexGrow: 1 }} />
+        <Button className="btn" onClick={props.showStats}>
+          <IonIcon
+            name="stats-chart-outline"
+            style={{ width: 18, height: 18, marginRight: 4 }}
+          />
+          Stats
+        </Button>
+        <Button className="btn" onClick={(event) => calibrate()}>
+          <IonIcon
+            name="scan-outline"
+            style={{ width: 18, height: 18, marginRight: 4 }}
+          />
+          Calibrate
+        </Button>
+        <Button className="btn" onClick={(event) => toggleControl()}>
+          <IonIcon
+            name="hammer-outline"
+            style={{ width: 18, height: 18, marginRight: 4 }}
+          />
+          Mode: {_.capitalize(props.mode)}
+          <ModeSelect
+            onChange={(e) =>
+              props.setMode(e.currentTarget.value as InterventionMode)
+            }
+          >
+            {MODES.map((m) => (
+              <option value={m}>{_.capitalize(m)}</option>
+            ))}
+          </ModeSelect>
+        </Button>
       </Header>
       <Tabs>
         {tabs.map((t, i) => (
@@ -164,32 +190,48 @@ export function Broswer() {
         )}
       </Tabs>
 
-      <div style={{}}>
+      <div style={{ flexGrow: 1, position: 'relative' }}>
         {tabs.map((url, i) => (
-          <webview
-            style={{
-              position: 'absolute',
-              opacity: currentTab === i ? 1 : 0,
-              height: '88.5%',
-              width: '99.25%',
-            }}
-            src={url}
-            id="webview"
-          ></webview>
+          <div style={{ pointerEvents: currentTab === i ? 'all' : 'none' }}>
+            <webview
+              allowFullScreen={false}
+              style={{
+                position: 'absolute',
+                opacity: currentTab === i ? 1 : 0,
+                // height: '100%',
+                // width: '100%',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                // marginBottom: 150,
+              }}
+              src={url}
+              id={'webview' + i}
+              onLoadStart={(e) => {
+                // console.log('LOAD PAGE:', e.currentTarget.id);
+                // const newTabs = tabs.slice();
+                // newTabs[i] = formatUrl(
+                //   // @ts-ignore
+                //   document.getElementById('webview' + i).getUrl()
+                // );
+              }}
+            />
+          </div>
         ))}
       </div>
     </Container>
   );
 }
 
-const Container = styled.div`
+export const Container = styled.div`
   display: flex;
   flex-direction: column;
-  height: 98vh;
+  height: 99vh;
   width: 99.25vw;
   background-color: white;
 `;
-const Header = styled.div`
+export const Header = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -199,4 +241,27 @@ const Tabs = styled.div`
   display: flex;
   flex-direction: row;
   padding: 0px 16px;
+`;
+
+export const Button = styled.p`
+  background-color: #007aff;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 16px;
+  padding: 4px;
+  color: white;
+  margin-left: 4px;
+  position: relative;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+`;
+const ModeSelect = styled.select`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: red;
+  opacity: 0;
 `;

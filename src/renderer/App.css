@@ -49,3 +49,12 @@ a:hover {
   align-items: center;
   margin: 20px 0;
 }
+
+@media (hover: hover) {
+  .btn:hover {
+    opacity: 0.75;
+  }
+}
+.btn {
+  cursor: pointer;
+}

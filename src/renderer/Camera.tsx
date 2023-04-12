@@ -6,9 +6,9 @@ import * as drawing from '@mediapipe/drawing_utils';
 import * as cam from '@mediapipe/camera_utils';
 import Webcam from 'react-webcam';
 import styled from 'styled-components';
-import { SHOW_CAMERA } from './App';
-import {addData} from './Output';
-import { lastPostureClass, curPostureClass} from './Diagram';
+import { InterventionMode, SHOW_CAMERA } from './App';
+import { addData } from './Output';
+import { lastPostureClass, curPostureClass } from './Diagram';
 
 export interface PostureState {
   relativeDistance?: number;
@@ -45,7 +45,7 @@ const handleCalibrate = function (results: Results) {
   );
   initialPose.noseX = results.poseLandmarks[0].x;
   initialPose.noseY = results.poseLandmarks[0].y;
-  addData("Calbration", results.poseLandmarks);
+  addData('Calbration', 'off', results.poseLandmarks);
   initialPose.calibreated = true;
 };
 
@@ -61,7 +61,11 @@ const initRelDistances = (relDistances: number[], rdLen: number) => {
   }
 };
 
-const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
+const Camera = (props: {
+  onUpdateState: (result: PostureState) => void;
+  isPaused: boolean;
+  mode: InterventionMode;
+}) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<any>(null);
   const connect = (window as any).drawConnectors;
@@ -85,6 +89,8 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
   }
 
   function onResults(results: Results) {
+    if (props.isPaused) return;
+
     // const video = webcamRef.current.video;
     const videoWidth = webcamRef.current?.video?.videoWidth;
     const videoHeight = webcamRef.current?.video?.videoHeight;
@@ -178,8 +184,8 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
       result.dyPercents = dyPercents;
     }
 
-    if(curPostureClass !== lastPostureClass) {
-      addData(curPostureClass, results.poseLandmarks);
+    if (curPostureClass !== lastPostureClass) {
+      addData(curPostureClass, props.mode, results.poseLandmarks);
     }
 
     props.onUpdateState(result);
@@ -220,7 +226,7 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
     }
   }, []);
   return (
-    <Container style={{ opacity: SHOW_CAMERA ? 1 : 0 }}>
+    <Container style={{ opacity: SHOW_CAMERA ? 0.5 : 0 }}>
       <Webcam
         ref={webcamRef}
         style={{
@@ -252,7 +258,7 @@ const Camera = (props: { onUpdateState: (result: PostureState) => void }) => {
   );
 };
 
-export { Camera, calibrate};
+export { Camera, calibrate };
 
 const Container = styled.div`
   position: absolute;
