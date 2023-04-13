@@ -71,7 +71,7 @@ const Diagram = (props: {
     updateHaptics({
       transformX,
       transformY,
-      scale,
+      scale_error,
       postureClass: newPostureClass,
     });
 

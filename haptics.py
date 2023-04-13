@@ -1,10 +1,16 @@
 # Python 3 server example
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import time
 from urllib.parse import urlparse, parse_qs
+import serial
+import time
 
 hostName = "localhost"
 serverPort = 8888
+
+ARDUINO_PORT = "COM12"
+BAUD_RATE = 115200
+
+ser = serial.Serial(ARDUINO_PORT, BAUD_RATE)
 
 class MyServer(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -13,14 +19,37 @@ class MyServer(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/plain")
         self.end_headers()
         parsed = urlparse(self.path)
+        print("vvvvvvvv PARSED BELOW vvvvv")
+        # print(parsed)
+        parsed2 = parse_qs(parsed.query) # prints {'other': ['some'], 'parameter': ['value']}
+        print(parsed2)
         self.wfile.write(bytes("Echo path: " + parsed.path + ", query: " + parsed.query, "utf-8"))
-        
-        if parsed.path == "control":
-            power = parsed.query.power
-            motor = parsed.query.motor
-            print("Set MOTOR " + motor + " to POWER " + power)
 
-if __name__ == "__main__":        
+        if parsed.path == "/control":
+            # print("Path: " + parsed.path + " || Power: " + parsed2['power'] + " || motor: "  + parsed2['motor'])
+            print(parsed2['power'])
+            print(parsed2['motor'])
+            power = int(float(parsed2['power'][0]))
+            motor = int(parsed2['motor'][0])
+            print("Set MOTOR " + str(motor) + " to POWER " + str(power))
+            motor_message = str(motor) + " " + str(power) + ">"
+            print(motor_message)
+            motor_message = motor_message.encode("utf-8")
+            print(repr(motor_message))
+            print("waiting for ack...")
+            ser.write(motor_message)
+
+            handshake = ser.readline()
+            if(handshake != b'ack\n'):
+                print("OH GOD NO WHY THE PAIN AHHHHHHH I DIDNT RECEIVE ACK INSTEAD I RECEIVED WHATS BELOW")
+                print(handshake)
+                quit()
+            else:
+                print("Got ack!")
+
+
+
+if __name__ == "__main__":
     webServer = HTTPServer((hostName, serverPort), MyServer)
     webServer.allow_reuse_address = True
     print("Server started http://%s:%s" % (hostName, serverPort))
