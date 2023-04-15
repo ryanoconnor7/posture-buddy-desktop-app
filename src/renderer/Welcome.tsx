@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { sendMessage } from './Haptics';
+import { Button, DISPLAY_MODES } from './Browser';
+import { InterventionMode } from './App';
+import _ from 'lodash';
 
-const Welcome = (props: { onFinish: () => void; onCalibrate: () => void }) => {
+const Welcome = (props: { onFinish: (m: InterventionMode) => void; onCalibrate: () => void }) => {
   const [stage, setStage] = useState(0);
 
   const nextStage = () => {
@@ -10,7 +13,7 @@ const Welcome = (props: { onFinish: () => void; onCalibrate: () => void }) => {
       // sendMessage();
       setStage(stage + 1);
     } else if (stage === 5) {
-      props.onFinish();
+      setStage(stage + 1);
     } else {
       // Start timer
       setStage(2);
@@ -47,16 +50,27 @@ const Welcome = (props: { onFinish: () => void; onCalibrate: () => void }) => {
           </>
         ) : stage < 5 ? (
           <h1 style={{ textAlign: 'center', fontSize: 200 }}>{5 - stage}</h1>
-        ) : (
+        ) : stage === 5 ? (
           <>
             <Checkmark />
             <h1 style={{ textAlign: 'center' }}>Calibrated</h1>
+          </>
+        ) : (
+          <>
+          <h1 style={{ textAlign: 'center' }}>Select Mode to Begin</h1>
+          <div style={{ width: 100, fontSize: 28, textAlign: 'center', display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
+          {DISPLAY_MODES.map(mode => (
+            <Button onClick={() => {
+              props.onFinish(mode);
+            }}>{_.capitalize(mode)}</Button>
+          ))}
+          </div>
           </>
         )}
       </Content>
       {(stage < 2 || stage === 5) && (
         <StartButton onClick={nextStage}>
-          {stage === 5 ? 'START' : stage === 0 ? 'BEGIN' : 'CALIBRATE'}
+          {stage === 5 ? 'NEXT' : stage === 0 ? 'BEGIN' : 'CALIBRATE'}
           <ArrowForward />
         </StartButton>
       )}

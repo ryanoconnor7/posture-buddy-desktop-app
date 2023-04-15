@@ -1,12 +1,16 @@
 import { NormalizedLandmarkList } from '@mediapipe/pose';
-
-export { addData, startTime, toggleControl, CSVdata };
 import { ExportToCsv } from 'export-to-csv';
 import { InterventionMode } from './App';
 
-let CSVdata: postureInstance[] = [];
+export let CSVdata: postureInstance[] = [];
 let start = Date.now();
-let isControl = false;
+let curMode:InterventionMode = 'off';
+
+let lastPoseArray: NormalizedLandmarkList = [];
+
+export const updateLastPoseArray = function (poseArray: NormalizedLandmarkList) {
+  lastPoseArray = poseArray;
+}
 
 interface postureInstance {
   Control?: string;
@@ -96,7 +100,7 @@ interface postureInstance {
   TwentyFourVis?: number;
 }
 
-const startTime = function () {
+export const startTime = function () {
   start = Date.now();
 };
 
@@ -136,105 +140,101 @@ const startTime = function () {
 //   return formattedLine;
 // }
 
-const toggleControl = function () {
-  if (isControl) {
-    isControl = false;
-  } else {
-    isControl = true;
-  }
+export const toggleMode = function (mode:InterventionMode) {
+  curMode = mode;
 };
 
-const addData = function (
+export const addData = function (
   reason: string,
-  mode: InterventionMode,
-  pose: NormalizedLandmarkList
 ) {
+  console.log(curMode);
+  console.log(reason);
   let line: postureInstance = {
-    Control: mode,
+    Control: curMode,
     Reason: reason,
     Time: Date.now() - start,
-    ZeroX: pose[0].x,
-    ZeroY: pose[0].y,
-    ZeroZ: pose[0].z,
-    ZeroVis: pose[0].visibility,
-    OneX: pose[1].x,
-    OneY: pose[1].y,
-    OneZ: pose[1].z,
-    OneVis: pose[1].visibility,
-    TwoX: pose[2].x,
-    TwoY: pose[2].y,
-    TwoZ: pose[2].z,
-    TwoVis: pose[2].visibility,
-    ThreeX: pose[3].x,
-    ThreeY: pose[3].y,
-    ThreeZ: pose[3].z,
-    ThreeVis: pose[3].visibility,
-    FourX: pose[4].x,
-    FourY: pose[4].y,
-    FourZ: pose[4].z,
-    FourVis: pose[4].visibility,
-    FiveX: pose[5].x,
-    FiveY: pose[5].y,
-    FiveZ: pose[5].z,
-    FiveVis: pose[5].visibility,
-    SixX: pose[6].x,
-    SixY: pose[6].y,
-    SixZ: pose[6].z,
-    SixVis: pose[6].visibility,
-    SevenX: pose[7].x,
-    SevenY: pose[7].y,
-    SevenZ: pose[7].z,
-    SevenVis: pose[7].visibility,
-    EightX: pose[8].x,
-    EightY: pose[8].y,
-    EightZ: pose[8].z,
-    EightVis: pose[8].visibility,
-    NineX: pose[9].x,
-    NineY: pose[9].y,
-    NineZ: pose[9].z,
-    NineVis: pose[9].visibility,
-    TenX: pose[10].x,
-    TenY: pose[10].y,
-    TenZ: pose[10].z,
-    TenVis: pose[10].visibility,
-    ElevenX: pose[11].x,
-    ElevenY: pose[11].y,
-    ElevenZ: pose[11].z,
-    ElevenVis: pose[11].visibility,
-    TwelveX: pose[12].x,
-    TwelveY: pose[12].y,
-    TwelveZ: pose[12].z,
-    TwelveVis: pose[12].visibility,
-    ThirteenX: pose[13].x,
-    ThirteenY: pose[13].y,
-    ThirteenZ: pose[13].z,
-    ThirteenVis: pose[13].visibility,
-    FourteenX: pose[14].x,
-    FourteenY: pose[14].y,
-    FourteenZ: pose[14].z,
-    FourteenVis: pose[14].visibility,
-    FifteenX: pose[15].x,
-    FifteenY: pose[15].y,
-    FifteenZ: pose[15].z,
-    FifteenVis: pose[15].visibility,
-    SixteenX: pose[16].x,
-    SixteenY: pose[16].y,
-    SixteenZ: pose[16].z,
-    SixteenVis: pose[16].visibility,
+    ZeroX: lastPoseArray[0].x,
+    ZeroY: lastPoseArray[0].y,
+    ZeroZ: lastPoseArray[0].z,
+    ZeroVis: lastPoseArray[0].visibility,
+    OneX: lastPoseArray[1].x,
+    OneY: lastPoseArray[1].y,
+    OneZ: lastPoseArray[1].z,
+    OneVis: lastPoseArray[1].visibility,
+    TwoX: lastPoseArray[2].x,
+    TwoY: lastPoseArray[2].y,
+    TwoZ: lastPoseArray[2].z,
+    TwoVis: lastPoseArray[2].visibility,
+    ThreeX: lastPoseArray[3].x,
+    ThreeY: lastPoseArray[3].y,
+    ThreeZ: lastPoseArray[3].z,
+    ThreeVis: lastPoseArray[3].visibility,
+    FourX: lastPoseArray[4].x,
+    FourY: lastPoseArray[4].y,
+    FourZ: lastPoseArray[4].z,
+    FourVis: lastPoseArray[4].visibility,
+    FiveX: lastPoseArray[5].x,
+    FiveY: lastPoseArray[5].y,
+    FiveZ: lastPoseArray[5].z,
+    FiveVis: lastPoseArray[5].visibility,
+    SixX: lastPoseArray[6].x,
+    SixY: lastPoseArray[6].y,
+    SixZ: lastPoseArray[6].z,
+    SixVis: lastPoseArray[6].visibility,
+    SevenX: lastPoseArray[7].x,
+    SevenY: lastPoseArray[7].y,
+    SevenZ: lastPoseArray[7].z,
+    SevenVis: lastPoseArray[7].visibility,
+    EightX: lastPoseArray[8].x,
+    EightY: lastPoseArray[8].y,
+    EightZ: lastPoseArray[8].z,
+    EightVis: lastPoseArray[8].visibility,
+    NineX: lastPoseArray[9].x,
+    NineY: lastPoseArray[9].y,
+    NineZ: lastPoseArray[9].z,
+    NineVis: lastPoseArray[9].visibility,
+    TenX: lastPoseArray[10].x,
+    TenY: lastPoseArray[10].y,
+    TenZ: lastPoseArray[10].z,
+    TenVis: lastPoseArray[10].visibility,
+    ElevenX: lastPoseArray[11].x,
+    ElevenY: lastPoseArray[11].y,
+    ElevenZ: lastPoseArray[11].z,
+    ElevenVis: lastPoseArray[11].visibility,
+    TwelveX: lastPoseArray[12].x,
+    TwelveY: lastPoseArray[12].y,
+    TwelveZ: lastPoseArray[12].z,
+    TwelveVis: lastPoseArray[12].visibility,
+    ThirteenX: lastPoseArray[13].x,
+    ThirteenY: lastPoseArray[13].y,
+    ThirteenZ: lastPoseArray[13].z,
+    ThirteenVis: lastPoseArray[13].visibility,
+    FourteenX: lastPoseArray[14].x,
+    FourteenY: lastPoseArray[14].y,
+    FourteenZ: lastPoseArray[14].z,
+    FourteenVis: lastPoseArray[14].visibility,
+    FifteenX: lastPoseArray[15].x,
+    FifteenY: lastPoseArray[15].y,
+    FifteenZ: lastPoseArray[15].z,
+    FifteenVis: lastPoseArray[15].visibility,
+    SixteenX: lastPoseArray[16].x,
+    SixteenY: lastPoseArray[16].y,
+    SixteenZ: lastPoseArray[16].z,
+    SixteenVis: lastPoseArray[16].visibility,
     //SeventeenX: pose[].x, SeventeenY: pose[, SeventeenZ: pose[].z, SeventeenVis: pose[].visibility,
     //EightteenX: pose[].x, EightteenY: pose[, EightteenZ: pose[].z, EightteenVis: pose[].visibility,
     //NineteenX: pose[].x, NineteenY: pose[, NineteenZ: pose[].z, NineteenVis: pose[].visibility,
     //TwentyX: pose[].x, TwentyY: pose[, TwentyZ: pose[].z, TwentyVis: pose[].visibility,
     //TwentyOneX: pose[].x, TwentyOneY: pose[, TwentyOneZ: pose[].z, TwentyOneVis: pose[].visibility,
     //TwentyTwoX: pose[].x, TwentyTwoY: pose[, TwentyTwoZ: pose[].z, TwentyTwoVis: pose[].visibility,
-    TwentyThreeX: pose[23].x,
-    TwentyThreeY: pose[23].y,
-    TwentyThreeZ: pose[23].z,
-    TwentyThreeVis: pose[23].visibility,
-    TwentyFourX: pose[24].x,
-    TwentyFourY: pose[24].y,
-    TwentyFourZ: pose[24].z,
-    TwentyFourVis: pose[24].visibility,
+    TwentyThreeX: lastPoseArray[23].x,
+    TwentyThreeY: lastPoseArray[23].y,
+    TwentyThreeZ: lastPoseArray[23].z,
+    TwentyThreeVis: lastPoseArray[23].visibility,
+    TwentyFourX: lastPoseArray[24].x,
+    TwentyFourY: lastPoseArray[24].y,
+    TwentyFourZ: lastPoseArray[24].z,
+    TwentyFourVis: lastPoseArray[24].visibility,
   };
   if (line !== undefined) {
     CSVdata.push(line);

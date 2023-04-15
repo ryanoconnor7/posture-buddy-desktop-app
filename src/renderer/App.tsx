@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react';
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import styled from 'styled-components';
-import icon from '../../assets/icon.svg';
+//import icon from '../../assets/icon.svg';
 import './App.css';
 import { Broswer } from './Browser';
 import { Camera, PostureState, calibrate } from './Camera';
 import Welcome from './Welcome';
 import Diagram, { PostureClass } from './Diagram';
-import { startTime, toggleControl, CSVdata } from './Output';
+import { startTime, toggleMode, addData} from './Output';
 import Stats from './Stats';
 
 export const SHOW_CAMERA = true;
 
-export type InterventionMode = 'off' | 'visual' | 'haptic' | 'all' | 'auto';
+export type InterventionMode = 'off' | 'visual' | 'haptic' | 'all' | 'auto' | 'test';
 
-const CYCLE: InterventionMode[] = ['off', 'visual', 'all'];
+const CYCLE: InterventionMode[] = ['off', 'visual']; //ADD BACK 'all' at end when testing haptics
 let cycleIndex = 0;
-let cycleInterval = 1000 * 15; // 1 minute
+let cycleInterval = 1000 * 60; // 1 minute
+const testInterval = (1000 * 60) * 5 //5 minutes
 let cycleTimer: NodeJS.Timeout | undefined;
 
 function Hello() {
@@ -27,13 +28,27 @@ function Hello() {
   const [postureState, setPostureState] = useState<PostureState | undefined>(
     undefined
   );
-  const [mode, setMode] = useState<InterventionMode>('off');
+  const [mode, _setMode] = useState<InterventionMode>('off');
   const [displayMode, setDisplayMode] = useState<InterventionMode>('auto');
   const [isShowingStats, setIsShowingStats] = useState(false);
 
-  const scheduleCycleTimer = () => {
+  const scheduleAutoCycleTimer = () => {
     cycleTimer = setTimeout(nextCyclePhase, cycleInterval);
   };
+
+  const scheduleTestCycleTimer = () => {
+    cycleTimer = setTimeout(testNextCycle, testInterval);
+  };
+
+  const cancelTimer = () => {
+    if (cycleTimer) clearTimeout(cycleTimer)
+  }
+
+  const setMode = (m: InterventionMode) => {
+    toggleMode(m)
+    _setMode(m)
+  }
+
   const nextCyclePhase = () => {
     cycleIndex += 1;
     if (cycleIndex >= CYCLE.length) {
@@ -41,38 +56,56 @@ function Hello() {
       cycleInterval *= 2; // Double phase length
     }
     setMode(CYCLE[cycleIndex]);
+    toggleMode(CYCLE[cycleIndex]);
     console.log(
-      'Auto Mode Change to',
+      'Test Mode Change to',
       CYCLE[cycleIndex].toUpperCase(),
       '| interval =',
       cycleInterval / 1000,
       'sec'
     );
-    scheduleCycleTimer();
+    scheduleAutoCycleTimer();
   };
+
+  const testNextCycle = () => {
+    cycleIndex += 1;
+    if(cycleIndex >= CYCLE.length) {
+      //TODO: trigger stats page and end test
+      addData("FINISH");
+      setIsShowingStats(true);
+    }
+    setMode(CYCLE[cycleIndex]);
+    toggleMode(CYCLE[cycleIndex]);
+    scheduleTestCycleTimer();
+  };
+
 
   const onModeChange = (m: InterventionMode) => {
     setDisplayMode(m);
+    cancelTimer()
 
     if (m === 'auto') {
       setMode(CYCLE[0]);
-      scheduleCycleTimer();
+      scheduleAutoCycleTimer();
+    } else if(m === 'test') {
+        setMode(CYCLE[0]);
+        scheduleTestCycleTimer();
     } else {
       clearTimeout(cycleTimer);
       setMode(m);
+      toggleMode(m);
     }
   };
-
-  useEffect(() => {
-    if (displayMode === 'auto') scheduleCycleTimer();
-  }, []);
 
   return (
     <Container>
       {isOnboarding ? (
         <Welcome
-          onFinish={() => {
+          onFinish={m => {
+            onModeChange(m);
             setIsOnboarding(false);
+            startTime();
+            addData("START");
           }}
           onCalibrate={() => {
             calibrate();
@@ -83,13 +116,19 @@ function Hello() {
         <Broswer
           mode={displayMode}
           setMode={(m) => onModeChange(m)}
-          showStats={() => setIsShowingStats(true)}
+          showStats={() => {
+            addData("PAUSE")
+            setIsShowingStats(true)
+          }}
         />
       )}
-      {isShowingStats && <Stats hide={() => setIsShowingStats(false)} />}
+      {isShowingStats && <Stats hide={() => {
+        setIsShowingStats(false)
+        addData("RESUME")
+        }} />}
 
       <Camera
-        isPaused={isShowingStats}
+        isCameraPaused={isShowingStats}
         mode={mode}
         onUpdateState={(state: PostureState) => {
           setPostureState(state);
@@ -118,14 +157,14 @@ function Hello() {
         }}
       />
 
-      {!isOnboarding &&
-        (mode === 'visual' || mode === 'all') &&
-        !isShowingStats && (
+      {(!isOnboarding && !isShowingStats) && (
           <Diagram
             transformX={transformX}
             transformY={transformY}
             scale={scale}
             state={postureState}
+            mode={mode}
+            visible={mode === 'visual' || mode === 'all'}
           />
         )}
     </Container>

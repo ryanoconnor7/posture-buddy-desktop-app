@@ -22,6 +22,8 @@ const Stats = (props: { hide: () => void }) => {
           Close
         </Button>
       </Header>
+      <h1>Testing complete!</h1>
+      <h1>Please download logs and send to your test requester!</h1>
     </AbsoluteContainer>
   );
 };

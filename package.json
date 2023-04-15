@@ -111,6 +111,7 @@
     "react": "^18.2.0",
     "react-csv": "^2.2.2",
     "react-dom": "^18.2.0",
+    "react-ionicons": "^4.2.0",
     "react-router-dom": "^6.8.1",
     "react-transition-group": "^4.4.5",
     "react-webcam": "^7.0.1",

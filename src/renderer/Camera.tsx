@@ -7,8 +7,8 @@ import * as cam from '@mediapipe/camera_utils';
 import Webcam from 'react-webcam';
 import styled from 'styled-components';
 import { InterventionMode, SHOW_CAMERA } from './App';
-import { addData } from './Output';
-import { lastPostureClass, curPostureClass } from './Diagram';
+import { addData, updateLastPoseArray } from './Output';
+import { lastPostureClass, curPostureClass} from './Diagram';
 
 export interface PostureState {
   relativeDistance?: number;
@@ -45,7 +45,8 @@ const handleCalibrate = function (results: Results) {
   );
   initialPose.noseX = results.poseLandmarks[0].x;
   initialPose.noseY = results.poseLandmarks[0].y;
-  addData('Calbration', 'off', results.poseLandmarks);
+  updateLastPoseArray(results.poseLandmarks);
+  addData('Calbration');
   initialPose.calibreated = true;
 };
 
@@ -63,7 +64,7 @@ const initRelDistances = (relDistances: number[], rdLen: number) => {
 
 const Camera = (props: {
   onUpdateState: (result: PostureState) => void;
-  isPaused: boolean;
+  isCameraPaused: boolean;
   mode: InterventionMode;
 }) => {
   const webcamRef = useRef<Webcam>(null);
@@ -89,7 +90,7 @@ const Camera = (props: {
   }
 
   function onResults(results: Results) {
-    if (props.isPaused) return;
+    if (props.isCameraPaused) return;
 
     // const video = webcamRef.current.video;
     const videoWidth = webcamRef.current?.video?.videoWidth;
@@ -184,9 +185,14 @@ const Camera = (props: {
       result.dyPercents = dyPercents;
     }
 
-    if (curPostureClass !== lastPostureClass) {
-      addData(curPostureClass, props.mode, results.poseLandmarks);
-    }
+    //console.log(lastPostureClass);
+    //console.log(curPostureClass);
+    updateLastPoseArray(results.poseLandmarks);
+
+    // if (curPostureClass !== lastPostureClass) {
+    //   //if (!props.isLoggingPaused)
+    //     addData(curPostureClass, results.poseLandmarks);
+    // }
 
     props.onUpdateState(result);
     canvasCtx.restore();

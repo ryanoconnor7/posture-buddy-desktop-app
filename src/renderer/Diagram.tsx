@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import moment from 'moment';
 import { transitionCSS } from './Utils';
 import { sendMessage, updateHaptics } from './Haptics';
+import {addData} from "./Output"
+import { InterventionMode } from './App';
 
 export type PostureClass = 'good' | 'fair' | 'bad';
 export const FAIR_ERROR_RATE = 12.5;
@@ -40,6 +42,8 @@ const Diagram = (props: {
   transformY: number;
   scale: number;
   state?: PostureState;
+  mode: InterventionMode;
+  visible: boolean;
 }) => {
   if (!props.state) return null;
 
@@ -68,17 +72,23 @@ const Diagram = (props: {
 
     lastPostureClass = curPostureClass;
     curPostureClass = newPostureClass;
-    updateHaptics({
-      transformX,
-      transformY,
-      scale,
-      postureClass: newPostureClass,
-    });
+
+    if(props.mode === 'all' || props.mode === 'haptic')
+      updateHaptics({
+        transformX,
+        transformY,
+        scale,
+        postureClass: newPostureClass,
+      });
 
     // Make copy of posture state
     let newPosture: Posture = { ...posture };
     if (newPostureClass !== newPosture.colorClass)
+      {
       newPosture.colorClass = newPostureClass;
+      console.log(newPostureClass);
+      addData(newPostureClass);
+      }
 
     if (newPostureClass !== posture.candidateClass) {
       newPosture.candidateClass = newPostureClass;
@@ -95,6 +105,8 @@ const Diagram = (props: {
 
     setPosture(newPosture);
   }, [props.state]);
+
+  if (!props.visible) return null
 
   return (
     <Overlay

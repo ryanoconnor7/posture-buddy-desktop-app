@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { csvReady, toggleControl } from './Output';
+import { csvReady, toggleMode } from './Output';
 import { calibrate } from './Camera';
 import { PostureBuddyLogo } from './Welcome';
 import { InterventionMode } from './App';
@@ -10,7 +10,7 @@ import { formatUrl } from './Utils';
 
 const HOME_PAGE = 'http://google.com';
 
-const MODES: InterventionMode[] = ['auto', 'off', 'visual', 'haptic', 'all'];
+export const DISPLAY_MODES: InterventionMode[] = ['auto', 'off', 'visual', 'haptic', 'all', 'test'];
 export function Broswer(props: {
   mode: InterventionMode;
   setMode: (m: InterventionMode) => void;
@@ -106,7 +106,7 @@ export function Broswer(props: {
           />
           Calibrate
         </Button>
-        <Button className="btn" onClick={(event) => toggleControl()}>
+        <Button className="btn">
           <IonIcon
             name="hammer-outline"
             style={{ width: 18, height: 18, marginRight: 4 }}
@@ -117,7 +117,7 @@ export function Broswer(props: {
               props.setMode(e.currentTarget.value as InterventionMode)
             }
           >
-            {MODES.map((m) => (
+            {DISPLAY_MODES.map((m) => (
               <option value={m}>{_.capitalize(m)}</option>
             ))}
           </ModeSelect>
