@@ -7,17 +7,24 @@ import { Broswer } from './Browser';
 import { Camera, PostureState, calibrate } from './Camera';
 import Welcome from './Welcome';
 import Diagram, { PostureClass } from './Diagram';
-import { startTime, toggleMode, addData} from './Output';
+import { startTime, toggleMode, addData } from './Output';
 import Stats from './Stats';
 
 export const SHOW_CAMERA = true;
 
-export type InterventionMode = 'off' | 'visual' | 'haptic' | 'all' | 'auto' | 'test';
+export type InterventionMode =
+  | 'off'
+  | 'visual'
+  | 'haptic'
+  | 'all'
+  | 'auto'
+  | 'test'
+  | 'extreme';
 
 const CYCLE: InterventionMode[] = ['off', 'visual']; //ADD BACK 'all' at end when testing haptics
 let cycleIndex = 0;
 let cycleInterval = 1000 * 60; // 1 minute
-const testInterval = (1000 * 60) * 5 //5 minutes
+const testInterval = 1000 * 60 * 5; //5 minutes
 let cycleTimer: NodeJS.Timeout | undefined;
 
 function Hello() {
@@ -41,13 +48,13 @@ function Hello() {
   };
 
   const cancelTimer = () => {
-    if (cycleTimer) clearTimeout(cycleTimer)
-  }
+    if (cycleTimer) clearTimeout(cycleTimer);
+  };
 
   const setMode = (m: InterventionMode) => {
-    toggleMode(m)
-    _setMode(m)
-  }
+    toggleMode(m);
+    _setMode(m);
+  };
 
   const nextCyclePhase = () => {
     cycleIndex += 1;
@@ -69,9 +76,9 @@ function Hello() {
 
   const testNextCycle = () => {
     cycleIndex += 1;
-    if(cycleIndex >= CYCLE.length) {
+    if (cycleIndex >= CYCLE.length) {
       //TODO: trigger stats page and end test
-      addData("FINISH");
+      addData('FINISH');
       setIsShowingStats(true);
     }
     setMode(CYCLE[cycleIndex]);
@@ -79,17 +86,16 @@ function Hello() {
     scheduleTestCycleTimer();
   };
 
-
   const onModeChange = (m: InterventionMode) => {
     setDisplayMode(m);
-    cancelTimer()
+    cancelTimer();
 
     if (m === 'auto') {
       setMode(CYCLE[0]);
       scheduleAutoCycleTimer();
-    } else if(m === 'test') {
-        setMode(CYCLE[0]);
-        scheduleTestCycleTimer();
+    } else if (m === 'test') {
+      setMode(CYCLE[0]);
+      scheduleTestCycleTimer();
     } else {
       clearTimeout(cycleTimer);
       setMode(m);
@@ -97,15 +103,26 @@ function Hello() {
     }
   };
 
+  const extremeModeActive =
+    mode === 'extreme' && !isOnboarding && !isShowingStats;
   return (
-    <Container>
+    <Container
+      style={
+        extremeModeActive
+          ? {
+              transform: `scale(${scale}, ${scale}) translate(${transformX}%, ${transformY}%) scale(${scale}, ${scale})`,
+              transition: 'transform 200ms ease',
+            }
+          : {}
+      }
+    >
       {isOnboarding ? (
         <Welcome
-          onFinish={m => {
+          onFinish={(m) => {
             onModeChange(m);
             setIsOnboarding(false);
             startTime();
-            addData("START");
+            addData('START');
           }}
           onCalibrate={() => {
             calibrate();
@@ -117,19 +134,30 @@ function Hello() {
           mode={displayMode}
           setMode={(m) => onModeChange(m)}
           showStats={() => {
-            addData("PAUSE")
-            setIsShowingStats(true)
+            addData('PAUSE');
+            setIsShowingStats(true);
           }}
         />
       )}
-      {isShowingStats && <Stats hide={() => {
-        setIsShowingStats(false)
-        addData("RESUME")
-        }} />}
+      {isShowingStats && (
+        <Stats
+          hide={() => {
+            setIsShowingStats(false);
+            addData('RESUME');
+          }}
+        />
+      )}
 
       <Camera
         isCameraPaused={isShowingStats}
         mode={mode}
+        showCamera={
+          isOnboarding ||
+          (displayMode !== 'test' &&
+            displayMode !== 'auto' &&
+            displayMode !== 'all' &&
+            !isShowingStats)
+        }
         onUpdateState={(state: PostureState) => {
           setPostureState(state);
           //setTransformX(state.dxPercent * -100 * 0.7);
@@ -157,16 +185,16 @@ function Hello() {
         }}
       />
 
-      {(!isOnboarding && !isShowingStats) && (
-          <Diagram
-            transformX={transformX}
-            transformY={transformY}
-            scale={scale}
-            state={postureState}
-            mode={mode}
-            visible={mode === 'visual' || mode === 'all'}
-          />
-        )}
+      {!isOnboarding && !isShowingStats && (
+        <Diagram
+          transformX={transformX}
+          transformY={transformY}
+          scale={scale}
+          state={postureState}
+          mode={mode}
+          visible={mode === 'visual' || mode === 'all'}
+        />
+      )}
     </Container>
   );
 }

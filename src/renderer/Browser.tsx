@@ -10,14 +10,26 @@ import { formatUrl } from './Utils';
 
 const HOME_PAGE = 'http://google.com';
 
-export const DISPLAY_MODES: InterventionMode[] = ['auto', 'off', 'visual', 'haptic', 'all', 'test'];
+export const DISPLAY_MODES: InterventionMode[] = [
+  'auto',
+  'off',
+  'visual',
+  'haptic',
+  'all',
+  'test',
+];
 export function Broswer(props: {
   mode: InterventionMode;
   setMode: (m: InterventionMode) => void;
   showStats: () => void;
 }) {
   const [searchBarText, setSearchBarText] = useState('');
-  const [tabs, setTabs] = useState<string[]>([HOME_PAGE]);
+  const [tabs, setTabs] = useState<string[]>([
+    'https://docs.google.com/presentation/d/1xMgw5TA8XgQmJG4QvEATZVm8cVZTqQpXEYxCwI4bYFA/present?usp=sharing',
+    'https://www.michigandaily.com',
+    'https://www.coolmathgames.com',
+    'https://bulletin.engin.umich.edu/courses/eecs#main',
+  ]);
   const [currentTab, setCurrentTab] = useState(0);
   const search = () => {
     const newTabs = tabs.slice();
@@ -118,7 +130,9 @@ export function Broswer(props: {
             }
           >
             {DISPLAY_MODES.map((m) => (
-              <option value={m}>{_.capitalize(m)}</option>
+              <option value={m} selected={m === props.mode}>
+                {_.capitalize(m)}
+              </option>
             ))}
           </ModeSelect>
         </Button>
@@ -127,6 +141,7 @@ export function Broswer(props: {
         {tabs.map((t, i) => (
           <>
             <div
+              className="btn"
               style={{
                 width: '12%',
                 height: 30,
@@ -153,9 +168,11 @@ export function Broswer(props: {
                   fontWeight: currentTab === i ? '500' : '400',
                   flexGrow: 1,
                   maxLines: 1,
+                  fontSize: 14,
+                  height: 18,
                 }}
               >
-                {t.replace(/^.*(:\/\/)/, '')}
+                {t.replace(/^.*(:\/\/)/, '').replace('www.', '')}
               </p>
               <p
                 onClick={() => closeTab(i)}
@@ -184,12 +201,13 @@ export function Broswer(props: {
               justifyContent: 'center',
             }}
             onClick={openNewTab}
+            className="btn"
           >
             <p style={{ fontSize: 18, fontWeight: '600', margin: 0 }}>+</p>
           </div>
         )}
       </Tabs>
-
+      <Separator />
       <div style={{ flexGrow: 1, position: 'relative' }}>
         {tabs.map((url, i) => (
           <div style={{ pointerEvents: currentTab === i ? 'all' : 'none' }}>
@@ -241,6 +259,10 @@ const Tabs = styled.div`
   display: flex;
   flex-direction: row;
   padding: 0px 16px;
+`;
+const Separator = styled.div`
+  height: 2px;
+  background-color: #78788044;
 `;
 
 export const Button = styled.p`

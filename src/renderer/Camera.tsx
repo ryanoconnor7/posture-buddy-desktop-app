@@ -6,9 +6,9 @@ import * as drawing from '@mediapipe/drawing_utils';
 import * as cam from '@mediapipe/camera_utils';
 import Webcam from 'react-webcam';
 import styled from 'styled-components';
-import { InterventionMode, SHOW_CAMERA } from './App';
+import { InterventionMode } from './App';
 import { addData, updateLastPoseArray } from './Output';
-import { lastPostureClass, curPostureClass} from './Diagram';
+import { lastPostureClass, curPostureClass } from './Diagram';
 
 export interface PostureState {
   relativeDistance?: number;
@@ -66,6 +66,7 @@ const Camera = (props: {
   onUpdateState: (result: PostureState) => void;
   isCameraPaused: boolean;
   mode: InterventionMode;
+  showCamera: boolean;
 }) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<any>(null);
@@ -232,7 +233,7 @@ const Camera = (props: {
     }
   }, []);
   return (
-    <Container style={{ opacity: SHOW_CAMERA ? 0.5 : 0 }}>
+    <Container style={{ opacity: props.showCamera ? 0.5 : 0 }}>
       <Webcam
         ref={webcamRef}
         style={{

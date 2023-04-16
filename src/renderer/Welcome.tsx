@@ -5,7 +5,10 @@ import { Button, DISPLAY_MODES } from './Browser';
 import { InterventionMode } from './App';
 import _ from 'lodash';
 
-const Welcome = (props: { onFinish: (m: InterventionMode) => void; onCalibrate: () => void }) => {
+const Welcome = (props: {
+  onFinish: (m: InterventionMode) => void;
+  onCalibrate: () => void;
+}) => {
   const [stage, setStage] = useState(0);
 
   const nextStage = () => {
@@ -24,14 +27,21 @@ const Welcome = (props: { onFinish: (m: InterventionMode) => void; onCalibrate: 
     }
   };
 
+  const row1: InterventionMode[] = ['test', 'auto', 'all'];
+  const row2: InterventionMode[] = ['visual', 'haptic', 'extreme'];
+
   return (
     <Container>
       <PostureBuddyLogo>PostureBuddy Browser</PostureBuddyLogo>
       <Content>
         {stage === 0 ? (
           <>
-            <h1 style={{ fontSize: 60 }}>Welcome</h1>
-            <h1>PostureBuddy, a browser designed to keep you moving.</h1>
+            <h1 style={{ fontSize: 60 }}>Welcome 👋</h1>
+            <h1>
+              PostureBuddy is a browser
+              <br />
+              designed to keep you moving.
+            </h1>
           </>
         ) : stage === 1 ? (
           <>
@@ -49,7 +59,14 @@ const Welcome = (props: { onFinish: (m: InterventionMode) => void; onCalibrate: 
             </h2>
           </>
         ) : stage < 5 ? (
-          <h1 style={{ textAlign: 'center', fontSize: 200 }}>{5 - stage}</h1>
+          <h1
+            style={{
+              textAlign: 'center',
+              fontSize: 200,
+            }}
+          >
+            {5 - stage}
+          </h1>
         ) : stage === 5 ? (
           <>
             <Checkmark />
@@ -57,14 +74,38 @@ const Welcome = (props: { onFinish: (m: InterventionMode) => void; onCalibrate: 
           </>
         ) : (
           <>
-          <h1 style={{ textAlign: 'center' }}>Select Mode to Begin</h1>
-          <div style={{ width: 100, fontSize: 28, textAlign: 'center', display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
-          {DISPLAY_MODES.map(mode => (
-            <Button onClick={() => {
-              props.onFinish(mode);
-            }}>{_.capitalize(mode)}</Button>
-          ))}
-          </div>
+            <h1 style={{ textAlign: 'center' }}>Select a Mode to Begin</h1>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                flexDirection: 'column',
+              }}
+            >
+              {[row1, row2].map((row) => (
+                <div style={{ flexDirection: 'row', display: 'flex' }}>
+                  {row.map((mode) => (
+                    <Button
+                      style={{
+                        width: 100,
+                        height: 100,
+                        fontSize: 26,
+                        margin: 8,
+                        fontWeight: '400',
+                        verticalAlign: 'center',
+                        justifyContent: 'center',
+                      }}
+                      className="btn"
+                      onClick={() => {
+                        props.onFinish(mode);
+                      }}
+                    >
+                      {_.capitalize(mode)}
+                    </Button>
+                  ))}
+                </div>
+              ))}
+            </div>
           </>
         )}
       </Content>
@@ -104,7 +145,7 @@ export const PostureBuddyLogo = styled.h2`
 `;
 const StartButton = styled.p`
   border-radius: 12px;
-  background-color: #9198e5;
+  background-color: #36588f;
   color: white;
   padding: 12px;
   position: absolute;
@@ -136,7 +177,7 @@ const ArrowForward = () => (
 );
 
 const Info = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" height="60">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" height="68">
     <path
       d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z"
       fill="none"
@@ -165,7 +206,12 @@ const Info = () => (
 );
 
 const Checkmark = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" height="136" viewBox="0 0 512 512">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    height="136"
+    viewBox="0 0 512 512"
+    style={{ marginTop: 48 }}
+  >
     <path
       d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192z"
       fill="none"
