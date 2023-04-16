@@ -4,15 +4,17 @@ import { InterventionMode } from './App';
 
 export let CSVdata: postureInstance[] = [];
 let start = Date.now();
-let curMode:InterventionMode = 'off';
+let curMode: InterventionMode = 'off';
 
 let lastPoseArray: NormalizedLandmarkList = [];
 
-export const updateLastPoseArray = function (poseArray: NormalizedLandmarkList) {
+export const updateLastPoseArray = function (
+  poseArray: NormalizedLandmarkList
+) {
   lastPoseArray = poseArray;
-}
+};
 
-interface postureInstance {
+export interface postureInstance {
   Control?: string;
   Reason?: string;
   Time?: number;
@@ -98,6 +100,9 @@ interface postureInstance {
   TwentyFourY?: number;
   TwentyFourZ?: number;
   TwentyFourVis?: number;
+  TranslateX?: number;
+  TranslateY?: number;
+  Scale?: number;
 }
 
 export const startTime = function () {
@@ -140,12 +145,17 @@ export const startTime = function () {
 //   return formattedLine;
 // }
 
-export const toggleMode = function (mode:InterventionMode) {
+export const toggleMode = function (mode: InterventionMode) {
   curMode = mode;
 };
 
 export const addData = function (
   reason: string,
+  transform?: {
+    TranslateX?: number;
+    TranslateY?: number;
+    Scale?: number;
+  }
 ) {
   console.log(curMode);
   console.log(reason);
@@ -235,6 +245,9 @@ export const addData = function (
     TwentyFourY: lastPoseArray[24].y,
     TwentyFourZ: lastPoseArray[24].z,
     TwentyFourVis: lastPoseArray[24].visibility,
+    TranslateX: transform?.TranslateX ?? 0,
+    TranslateY: transform?.TranslateY ?? 0,
+    Scale: transform?.Scale ?? 0,
   };
   if (line !== undefined) {
     CSVdata.push(line);

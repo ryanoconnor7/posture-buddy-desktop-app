@@ -6,16 +6,16 @@ import { useEffect, useState } from 'react';
 import moment from 'moment';
 import { transitionCSS } from './Utils';
 import { sendMessage, updateHaptics } from './Haptics';
-import {addData} from "./Output"
+import { addData } from './Output';
 import { InterventionMode } from './App';
 
 export type PostureClass = 'good' | 'fair' | 'bad';
 export const FAIR_ERROR_RATE = 12.5;
 export const BAD_ERROR_RATE = 25;
-export {lastPostureClass, curPostureClass};
+export { lastPostureClass, curPostureClass };
 
-let lastPostureClass:string = 'good';
-let curPostureClass:string = 'good';
+let lastPostureClass: string = 'good';
+let curPostureClass: string = 'good';
 
 interface Posture {
   class: PostureClass;
@@ -24,7 +24,7 @@ interface Posture {
   timestamp: number;
 }
 
-const postureClassColor = {
+export const postureClassColor = {
   good: '#34c759',
   fair: '#F2A900',
   bad: '#ff3b30',
@@ -73,7 +73,7 @@ const Diagram = (props: {
     lastPostureClass = curPostureClass;
     curPostureClass = newPostureClass;
 
-    if(props.mode === 'all' || props.mode === 'haptic')
+    if (props.mode === 'all' || props.mode === 'haptic')
       updateHaptics({
         transformX,
         transformY,
@@ -83,12 +83,14 @@ const Diagram = (props: {
 
     // Make copy of posture state
     let newPosture: Posture = { ...posture };
-    if (newPostureClass !== newPosture.colorClass)
-      {
+    if (newPostureClass !== newPosture.colorClass) {
       newPosture.colorClass = newPostureClass;
-      console.log(newPostureClass);
-      addData(newPostureClass);
-      }
+      addData(newPostureClass, {
+        TranslateX: transformX * -1,
+        TranslateY: transformY,
+        Scale: scale_error,
+      });
+    }
 
     if (newPostureClass !== posture.candidateClass) {
       newPosture.candidateClass = newPostureClass;
@@ -98,6 +100,11 @@ const Diagram = (props: {
       if (posture.class === 'bad' && newPostureClass !== 'good') return;
 
       if (moment().unix() - posture.timestamp > requiredDelay) {
+        addData(`${newPostureClass}-state`, {
+          TranslateX: transformX * -1,
+          TranslateY: transformY,
+          Scale: scale_error,
+        });
         newPosture.class = newPostureClass;
         newPosture.colorClass = newPostureClass;
       }
@@ -106,7 +113,7 @@ const Diagram = (props: {
     setPosture(newPosture);
   }, [props.state]);
 
-  if (!props.visible) return null
+  if (!props.visible) return null;
 
   return (
     <Overlay
