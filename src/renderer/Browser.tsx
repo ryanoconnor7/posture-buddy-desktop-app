@@ -17,6 +17,7 @@ export const DISPLAY_MODES: InterventionMode[] = [
   'haptic',
   'all',
   'test',
+  'extreme'
 ];
 export function Broswer(props: {
   mode: InterventionMode;
