@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { csvReady, toggleMode } from './Output';
-import { calibrate, landmarksLost } from './Camera';
+import { calibrate } from './Camera';
 import { PostureBuddyLogo } from './Welcome';
 import { InterventionDisplayMode, InterventionMode } from './App';
 import _ from 'lodash';

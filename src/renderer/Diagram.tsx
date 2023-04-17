@@ -80,6 +80,13 @@ const Diagram = (props: {
         scale_error,
         postureClass: newPostureClass,
       });
+    else if (props.mode === 'paused')
+      updateHaptics({
+        transformX,
+        transformY,
+        scale_error,
+        postureClass: 'good',
+      });
 
     // Make copy of posture state
     let newPosture: Posture = { ...posture };

@@ -7,7 +7,7 @@ import { Broswer } from './Browser';
 import { Camera, PostureState, calibrate } from './Camera';
 import Welcome from './Welcome';
 import Diagram, { PostureClass } from './Diagram';
-import { startTime, toggleMode, addData } from './Output';
+import { startTime, toggleMode, addData, start } from './Output';
 import Stats from './Stats';
 
 export const SHOW_CAMERA = true;
@@ -29,6 +29,7 @@ const testInterval = 1000 * 60 * 5; //5 minutes
 let cycleTimer: NodeJS.Timeout | undefined;
 
 let landmarksLost = false;
+let unPauseTimer: NodeJS.Timeout | undefined = undefined;
 let lastMode: InterventionDisplayMode = 'off';
 
 function Hello() {
@@ -57,18 +58,9 @@ function Hello() {
   };
 
   const setMode = (m: InterventionMode) => {
+    console.log('setMode:', m);
     toggleMode(m);
     _setMode(m);
-  };
-
-  const onCameraPause = () => {
-    if (!landmarksLost) {
-      landmarksLost = true;
-      lastMode = displayMode;
-      console.log('Camera pause with display:', displayMode, mode);
-      onModeChange('paused');
-      addData('PAUSE');
-    }
   };
 
   const nextCyclePhase = () => {
@@ -103,7 +95,7 @@ function Hello() {
   };
 
   const onModeChange = (m: InterventionDisplayMode) => {
-    console.log('onModeChange:', m);
+    console.log('onModeChange: prevMode', displayMode);
     setDisplayMode(m);
     cancelTimer();
 
@@ -168,7 +160,6 @@ function Hello() {
       <Camera
         isCameraPaused={isShowingStats}
         mode={mode}
-        displayMode={displayMode}
         setMode={(m) => onModeChange(m)}
         cameraOpacity={
           isOnboarding
@@ -180,13 +171,27 @@ function Hello() {
             ? 0.5
             : 0
         }
-        onCameraPause={onCameraPause}
-        onUpdateState={(state: PostureState) => {
-          if (landmarksLost) {
-            landmarksLost = false;
-            addData('RESUME');
-            // @ts-ignore
-            onModeChange(lastMode);
+        onUpdateState={(state: PostureState | null) => {
+          if (state == null) {
+            clearTimeout(unPauseTimer);
+            if (!landmarksLost && !isOnboarding) {
+              console.log(mode);
+              landmarksLost = true;
+              lastMode = displayMode;
+              onModeChange('paused');
+              addData('PAUSE');
+            }
+            return;
+          } else if (landmarksLost) {
+            if (!unPauseTimer) {
+              unPauseTimer = setTimeout(() => {
+                landmarksLost = false;
+                addData('RESUME');
+                // @ts-ignore
+                onModeChange(lastMode);
+              }, 2000);
+            }
+            return;
           }
 
           setPostureState(state);

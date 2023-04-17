@@ -63,13 +63,11 @@ const initRelDistances = (relDistances: number[], rdLen: number) => {
 };
 
 const Camera = (props: {
-  onUpdateState: (result: PostureState) => void;
+  onUpdateState: (result: PostureState | null) => void;
   isCameraPaused: boolean;
   mode: InterventionMode;
-  displayMode: InterventionDisplayMode;
   cameraOpacity: number;
   setMode: (m: InterventionDisplayMode) => void;
-  onCameraPause: () => void;
 }) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<any>(null);
@@ -93,10 +91,10 @@ const Camera = (props: {
     dyPercents.push(1);
   }
 
-  function onResults(results: Results) {
+  const onResults = (results: Results) => {
     if (props.isCameraPaused) return;
     if (!results.poseLandmarks?.length) {
-      props.onCameraPause();
+      props.onUpdateState(null);
       return;
     }
 
@@ -171,9 +169,8 @@ const Camera = (props: {
       result.relativeDistance = diffPercent;
     }
 
-    console.log('relDist:', result.relativeDistance);
     if ((result.relativeDistance ?? 1) < 0.5) {
-      props.onCameraPause();
+      props.onUpdateState(null);
       return;
     }
 
@@ -210,7 +207,7 @@ const Camera = (props: {
 
     props.onUpdateState(result);
     canvasCtx.restore();
-  }
+  };
   // }
 
   // setInterval(())
@@ -230,7 +227,7 @@ const Camera = (props: {
       minTrackingConfidence: 0.5,
     });
 
-    pose.onResults(onResults);
+    pose.onResults((r) => onResults(r));
 
     if (webcamRef.current?.video) {
       camera = new cam.Camera(webcamRef.current.video, {

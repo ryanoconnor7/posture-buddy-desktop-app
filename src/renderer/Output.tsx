@@ -3,8 +3,8 @@ import { ExportToCsv } from 'export-to-csv';
 import { InterventionMode } from './App';
 
 export let CSVdata: postureInstance[] = [];
-let start = Date.now();
-let curMode: InterventionMode = 'off';
+export let start = Date.now();
+export let curMode: InterventionMode = 'off';
 
 let lastPoseArray: NormalizedLandmarkList = [];
 
