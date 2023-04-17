@@ -5,13 +5,20 @@ const HAPTICS_HOST = 'http://localhost:8888';
 // Motor: [0, 5]
 // Power [0, 255]
 
-interface MotorAction {
-  motor: number;
-  power: number;
-}
+type MotorAction = number[];
 
-export async function sendMessage(action: MotorAction) {
-  const actionStr = `control?motor=${action.motor}&power=${action.power}`;
+let zeroArray = [0,0,0,0,0,0];
+
+let pendingAction: MotorAction | undefined = undefined
+let serverReady = true
+
+export async function sendMessage(powers: number[]) {
+  if (!serverReady) {
+    pendingAction = powers.slice();
+    return;
+  }
+  serverReady = false
+  const actionStr = `control?powers=${powers.join(",")}`;
   const url = `${HAPTICS_HOST}/${actionStr}`;
 
   try {
@@ -19,10 +26,18 @@ export async function sendMessage(action: MotorAction) {
       method: 'GET',
     });
     const data = await res.text();
-    console.log('Haptic action', action, 'response:', res, ', data:', data);
+    console.log('Haptic action', powers, 'response:', res, ', data:', data);
   } catch (e) {
-    console.log('Haptic action', action, 'failed with error:', e);
+    console.log('Haptic action', powers, 'failed with error:', e);
   }
+  serverReady = true
+  if (pendingAction || (pendingAction === zeroArray)) {
+    console.log("Sending pending action:", pendingAction)
+    sendMessage(pendingAction.slice())
+    lastSentPowers = pendingAction.slice();
+    pendingAction = undefined;
+  }
+
 }
 
 let lastSentPowers = [0, 0, 0, 0, 0, 0];
@@ -46,7 +61,7 @@ export function updateHaptics(props: {
     //Scale the range of distances to motor's strength range
     //range of absolute value for transformX is FAIR_ERROR_RATE to BAD_ERROR_RATE
     let powerX: number = scaleRange(Math.abs(props.transformX), FAIR_ERROR_RATE, BAD_ERROR_RATE, 150, 255);
-    let powerY: number = scaleRange(Math.abs(props.transformX), FAIR_ERROR_RATE, BAD_ERROR_RATE, 150, 255);
+    let powerY: number = scaleRange(Math.abs(props.transformY), FAIR_ERROR_RATE, BAD_ERROR_RATE, 150, 255);
     let powerScale: number = scaleRange(Math.abs(props.scale_error), FAIR_ERROR_RATE, BAD_ERROR_RATE, 150, 255);
 
     //if we are to the right, activate 1, 3, and 5
@@ -114,12 +129,11 @@ export function updateHaptics(props: {
   //     return 0;
   //   }
   // });
-
-  newPowers.forEach((power, i) => {
-    if (power !== lastSentPowers[i]) {
-      sendMessage({ motor: i, power });
-    }
-  });
-
-  lastSentPowers = newPowers;
+  console.log("qlastSentPowers:", lastSentPowers);
+  console.log("queue-ing:", newPowers);
+  //if (newPowers.find((p, i) => p != lastSentPowers[i])){
+  if(newPowers.toString() != lastSentPowers.toString()){
+    console.log("new and old powers not equal, so sending message")
+    sendMessage(newPowers);
+  }
 }

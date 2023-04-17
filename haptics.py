@@ -23,21 +23,23 @@ class MyServer(BaseHTTPRequestHandler):
         # print(parsed)
         parsed2 = parse_qs(parsed.query) # prints {'other': ['some'], 'parameter': ['value']}
         print(parsed2)
-        self.wfile.write(bytes("Echo path: " + parsed.path + ", query: " + parsed.query, "utf-8"))
+        # self.wfile.write(bytes("Echo path: " + parsed.path + ", query: " + parsed.query, "utf-8"))
 
         if parsed.path == "/control":
             # print("Path: " + parsed.path + " || Power: " + parsed2['power'] + " || motor: "  + parsed2['motor'])
-            print(parsed2['power'])
-            print(parsed2['motor'])
-            power = int(float(parsed2['power'][0]))
-            motor = int(parsed2['motor'][0])
-            print("Set MOTOR " + str(motor) + " to POWER " + str(power))
-            motor_message = str(motor) + " " + str(power) + ">"
+            # print(parsed2['power'])
+            # print(parsed2['motor'])
+            powers = parsed2['powers'][0]
+            # print("Set POWERS to " + str(powers))
+            motor_message = str(powers) + ">"
             print(motor_message)
             motor_message = motor_message.encode("utf-8")
             print(repr(motor_message))
             print("waiting for ack...")
             ser.write(motor_message)
+
+            #wait until serial is available
+              #do stuff until message is received from arduino
 
             handshake = ser.readline()
             if(handshake != b'ack\n'):
@@ -46,6 +48,9 @@ class MyServer(BaseHTTPRequestHandler):
                 quit()
             else:
                 print("Got ack!")
+
+            self.wfile.write(bytes("Echo path: " + parsed.path + ", query: " + parsed.query, "utf-8"))
+
 
 
 

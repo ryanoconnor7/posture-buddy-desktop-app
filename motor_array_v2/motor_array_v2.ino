@@ -43,19 +43,16 @@ void setup() {
    Y is an int and indicates what speed to set that motor to
 */
 void loop() {
-  //  left_test();
   //test_motors();
-  //wait for serial input then parse and update motor values
-  //might be easier to have one "update" function that sends over values for all 6 motors, and the coded here parses through all 6 commands
-  //definitely fast enough where there will be no noticeable difference between 6 and 1 string parses
-  //  while(Serial.available()){
-  //    String input_string = Serial.readString();
-  //    int space_index = input_string.indexOf(' ');
-  //    int motor_num = input_string.substring(0, space_index).toInt();
-  //    int new_speed = input_string.substring(space_index+1).toInt();
-  //    analogWrite(motorPins[motor_num], new_speed);
-  //    delay(1);
+  main_loop();
+}
 
+
+
+//**********TESTS BELOW*****************
+
+//main loop. put in a function for modularity
+void main_loop(){
   if (Serial.available() > 0) {
     char c = Serial.read();
     if (c != EOLChar) {
@@ -95,13 +92,10 @@ void loop() {
 }
 
 
-
-//**********TESTS BELOW*****************
-
 //put this test in loop()
 void test_motors() {
   for (int i = 0; i < NUM_MOTORS; i++) {
-    analogWrite(motorPins[i], 180);
+    analogWrite(motorPins[i], 255);
     delay(3000);
     digitalWrite(motorPins[i], LOW);
   }
