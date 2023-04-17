@@ -171,6 +171,12 @@ const Camera = (props: {
       result.relativeDistance = diffPercent;
     }
 
+    console.log('relDist:', result.relativeDistance);
+    if ((result.relativeDistance ?? 1) < 0.5) {
+      props.onCameraPause();
+      return;
+    }
+
     const nose =
       results.poseLandmarks?.length > 0 ? results.poseLandmarks[0] : undefined;
     if (nose && (nose.visibility ?? 0 > 0.5)) {
