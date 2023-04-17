@@ -34,7 +34,7 @@ export const postureClassColor = {
 const postureClassDelay = {
   good: 2,
   fair: 0,
-  bad: 7,
+  bad: 3,
 };
 
 const Diagram = (props: {

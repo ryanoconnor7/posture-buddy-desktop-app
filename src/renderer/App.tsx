@@ -17,15 +17,19 @@ export type InterventionMode =
   | 'visual'
   | 'haptic'
   | 'all'
-  | 'auto'
-  | 'test'
-  | 'extreme';
+  | 'extreme'
+  | 'paused';
 
-const CYCLE: InterventionMode[] = ['off', 'visual']; //ADD BACK 'all' at end when testing haptics
+export type InterventionDisplayMode = InterventionMode | 'auto' | 'test';
+
+const CYCLE: InterventionMode[] = ['off', 'visual', 'all', 'haptic']; //ADD BACK 'all' at end when testing haptics
 let cycleIndex = 0;
-let cycleInterval = 1000 * 60; // 1 minute
+let cycleInterval = 1000 * 45; // 1 minute
 const testInterval = 1000 * 60 * 5; //5 minutes
 let cycleTimer: NodeJS.Timeout | undefined;
+
+let landmarksLost = false;
+let lastMode: InterventionDisplayMode = 'off';
 
 function Hello() {
   const [scale, setScale] = useState(1);
@@ -36,7 +40,8 @@ function Hello() {
     undefined
   );
   const [mode, _setMode] = useState<InterventionMode>('off');
-  const [displayMode, setDisplayMode] = useState<InterventionMode>('auto');
+  const [displayMode, setDisplayMode] =
+    useState<InterventionDisplayMode>('auto');
   const [isShowingStats, setIsShowingStats] = useState(false);
 
   const scheduleAutoCycleTimer = () => {
@@ -56,14 +61,24 @@ function Hello() {
     _setMode(m);
   };
 
+  const onCameraPause = () => {
+    if (!landmarksLost) {
+      landmarksLost = true;
+      lastMode = displayMode;
+      console.log('Camera pause with display:', displayMode, mode);
+      onModeChange('paused');
+      addData('PAUSE');
+    }
+  };
+
   const nextCyclePhase = () => {
     cycleIndex += 1;
     if (cycleIndex >= CYCLE.length) {
       cycleIndex = 0;
-      cycleInterval *= 2; // Double phase length
+      // cycleInterval *= 2; // Double phase length
     }
     setMode(CYCLE[cycleIndex]);
-    toggleMode(CYCLE[cycleIndex]);
+    addData('NEXT_CYCLE');
     console.log(
       'Test Mode Change to',
       CYCLE[cycleIndex].toUpperCase(),
@@ -80,13 +95,15 @@ function Hello() {
       //TODO: trigger stats page and end test
       addData('FINISH');
       setIsShowingStats(true);
+      return;
     }
     setMode(CYCLE[cycleIndex]);
-    toggleMode(CYCLE[cycleIndex]);
+    addData('NEXT_CYCLE');
     scheduleTestCycleTimer();
   };
 
-  const onModeChange = (m: InterventionMode) => {
+  const onModeChange = (m: InterventionDisplayMode) => {
+    console.log('onModeChange:', m);
     setDisplayMode(m);
     cancelTimer();
 
@@ -134,7 +151,7 @@ function Hello() {
           mode={displayMode}
           setMode={(m) => onModeChange(m)}
           showStats={() => {
-            addData('PAUSE');
+            if (mode !== 'paused') addData('PAUSE');
             setIsShowingStats(true);
           }}
         />
@@ -151,14 +168,27 @@ function Hello() {
       <Camera
         isCameraPaused={isShowingStats}
         mode={mode}
-        showCamera={
-          isOnboarding ||
-          (displayMode !== 'test' &&
-            displayMode !== 'auto' &&
-            displayMode !== 'all' &&
-            !isShowingStats)
+        displayMode={displayMode}
+        setMode={(m) => onModeChange(m)}
+        cameraOpacity={
+          isOnboarding
+            ? 0.8
+            : displayMode !== 'test' &&
+              displayMode !== 'auto' &&
+              displayMode !== 'all' &&
+              !isShowingStats
+            ? 0.5
+            : 0
         }
+        onCameraPause={onCameraPause}
         onUpdateState={(state: PostureState) => {
+          if (landmarksLost) {
+            landmarksLost = false;
+            addData('RESUME');
+            // @ts-ignore
+            onModeChange(lastMode);
+          }
+
           setPostureState(state);
           //setTransformX(state.dxPercent * -100 * 0.7);
           //setTransformY(state.dyPercent * -100 * 0.7);

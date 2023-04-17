@@ -2,11 +2,13 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import { sendMessage } from './Haptics';
 import { Button, DISPLAY_MODES } from './Browser';
-import { InterventionMode } from './App';
+import { InterventionDisplayMode, InterventionMode } from './App';
 import _ from 'lodash';
 
+const COUNTDOWN_DELAY = 800;
+
 const Welcome = (props: {
-  onFinish: (m: InterventionMode) => void;
+  onFinish: (m: InterventionDisplayMode) => void;
   onCalibrate: () => void;
 }) => {
   const [stage, setStage] = useState(0);
@@ -20,15 +22,15 @@ const Welcome = (props: {
     } else {
       // Start timer
       setStage(2);
-      setTimeout(() => setStage(3), 1000);
-      setTimeout(() => setStage(4), 2000);
-      setTimeout(() => setStage(5), 3000);
-      setTimeout(() => props.onCalibrate(), 3000);
+      setTimeout(() => setStage(3), COUNTDOWN_DELAY);
+      setTimeout(() => setStage(4), COUNTDOWN_DELAY * 2);
+      setTimeout(() => setStage(5), COUNTDOWN_DELAY * 3 + 100);
+      setTimeout(() => props.onCalibrate(), COUNTDOWN_DELAY * 3 + 100);
     }
   };
 
-  const row1: InterventionMode[] = ['test', 'auto', 'all'];
-  const row2: InterventionMode[] = ['visual', 'haptic', 'extreme'];
+  const row1: InterventionDisplayMode[] = ['test', 'auto', 'all'];
+  const row2: InterventionDisplayMode[] = ['visual', 'haptic', 'extreme'];
 
   return (
     <Container>
@@ -40,7 +42,7 @@ const Welcome = (props: {
             <h1>
               PostureBuddy is a browser
               <br />
-              designed to keep you moving.
+              designed to watch your posture.
             </h1>
           </>
         ) : stage === 1 ? (
@@ -50,7 +52,7 @@ const Welcome = (props: {
             </div>
             <h1>First, we need to calibrate.</h1>
             <h2 style={{ fontWeight: '400' }}>
-              Get comfortable in the position you will be browing.
+              Get comfortable in the position you will be browsing.
             </h2>
             <h2 style={{ fontWeight: '400' }}>
               You'll have 3 seconds to get ready

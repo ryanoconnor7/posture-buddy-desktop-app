@@ -6,7 +6,7 @@ import * as drawing from '@mediapipe/drawing_utils';
 import * as cam from '@mediapipe/camera_utils';
 import Webcam from 'react-webcam';
 import styled from 'styled-components';
-import { InterventionMode } from './App';
+import { InterventionDisplayMode, InterventionMode } from './App';
 import { addData, updateLastPoseArray } from './Output';
 import { lastPostureClass, curPostureClass } from './Diagram';
 
@@ -66,7 +66,10 @@ const Camera = (props: {
   onUpdateState: (result: PostureState) => void;
   isCameraPaused: boolean;
   mode: InterventionMode;
-  showCamera: boolean;
+  displayMode: InterventionDisplayMode;
+  cameraOpacity: number;
+  setMode: (m: InterventionDisplayMode) => void;
+  onCameraPause: () => void;
 }) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<any>(null);
@@ -92,6 +95,10 @@ const Camera = (props: {
 
   function onResults(results: Results) {
     if (props.isCameraPaused) return;
+    if (!results.poseLandmarks?.length) {
+      props.onCameraPause();
+      return;
+    }
 
     // const video = webcamRef.current.video;
     const videoWidth = webcamRef.current?.video?.videoWidth;
@@ -233,7 +240,9 @@ const Camera = (props: {
     }
   }, []);
   return (
-    <Container style={{ opacity: props.showCamera ? 0.5 : 0 }}>
+    <Container
+      style={{ opacity: props.mode === 'paused' ? 0 : props.cameraOpacity }}
+    >
       <Webcam
         ref={webcamRef}
         style={{

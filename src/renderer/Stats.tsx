@@ -4,9 +4,14 @@ import { CSVdata, csvReady, postureInstance } from './Output';
 import { PostureBuddyLogo } from './Welcome';
 import IonIcon from '@reacticons/ionicons';
 import _ from 'lodash';
-import { timeMinSec, timeSec } from './Utils';
+import {
+  feedbackMethodDisplay,
+  modeSummary,
+  timeMinSec,
+  timeSec,
+} from './Utils';
 import { useEffect, useState } from 'react';
-import { BAD_ERROR_RATE, postureClassColor } from './Diagram';
+import { BAD_ERROR_RATE, PostureClass, postureClassColor } from './Diagram';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -17,8 +22,10 @@ import {
   PointElement,
   LineElement,
   Title,
+  BarElement,
 } from 'chart.js';
-import { Doughnut, Line, Pie } from 'react-chartjs-2';
+import { Bar, Doughnut, Line, Pie } from 'react-chartjs-2';
+import { InterventionMode } from './App';
 
 ChartJS.register(
   CategoryScale,
@@ -28,18 +35,27 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
+  BarElement,
   ArcElement
 );
 
 const processData = () => {
   let data = CSVdata;
   let tStart: number | undefined = undefined;
-  let durations = {
+  const durationsDefault = {
     total: 0,
     pause: 0,
     good: 0,
     fair: 0,
     bad: 0,
+  };
+  let durations = {
+    overall: { ...durationsDefault },
+    off: { ...durationsDefault },
+    visual: { ...durationsDefault },
+    haptic: { ...durationsDefault },
+    all: { ...durationsDefault },
+    extreme: { ...durationsDefault },
   };
 
   // Reasons for each posture violation
@@ -56,8 +72,27 @@ const processData = () => {
   };
   const correctionTimes: number[] = [];
 
-  let lastBadStartIndex = 0;
-  let currState: 'good' | 'fair' | 'bad' = 'good';
+  let lastMode: any = 'off';
+  const addDuration = (
+    state: PostureClass | 'total' | 'pause',
+    value: number,
+    mode: InterventionMode = 'off'
+  ) => {
+    // Always add to overall
+    durations.overall[state] += value;
+
+    // Add to individual modes
+    if (mode == 'paused') {
+      // @ts-ignore
+      durations[lastMode][state] += value;
+    } else {
+      durations[mode][state] += value;
+      lastMode = mode;
+    }
+  };
+
+  let lastBadElapsed = 0;
+  let currState: PostureClass = 'good';
   data
     .filter((l) => !l.Reason?.includes('-state'))
     .forEach((log, i, r) => {
@@ -72,30 +107,31 @@ const processData = () => {
       const frameDuration = (log.Time ?? 0) - (prevLog.Time ?? 0);
       switch (log.Reason) {
         case 'PAUSE':
-          durations[currState] += frameDuration;
+        case 'FINISH':
+        case 'NEXT_CYCLE':
+          addDuration(currState, frameDuration, log.Control);
           break;
         case 'RESUME':
-          durations.pause += frameDuration;
+          addDuration('pause', frameDuration, log.Control);
           break;
         case 'good':
         case 'fair':
         case 'bad':
-          durations[currState] += frameDuration;
+          addDuration(currState, frameDuration, log.Control);
           currState = log.Reason;
           break;
       }
 
-      if (log.Reason === 'bad' && lastBadStartIndex === 0) {
-        lastBadStartIndex = i;
-      } else if (log.Reason === 'good' && lastBadStartIndex) {
-        const badLog = data[lastBadStartIndex];
-        const diffBadToGood = (log.Time ?? 0) - (badLog.Time ?? 0);
-        correctionTimes.push(diffBadToGood);
-        lastBadStartIndex = 0;
+      if (log.Reason !== 'RESUME') {
+        addDuration('total', frameDuration, log.Control);
       }
 
-      if (log.Reason !== 'RESUME') {
-        durations.total += frameDuration;
+      if (log.Reason === 'bad' && lastBadElapsed == 0) {
+        lastBadElapsed = durations.overall.total;
+      } else if (log.Reason === 'good' && lastBadElapsed > 0) {
+        const diffBadToGood = durations.overall.total - lastBadElapsed;
+        correctionTimes.push(diffBadToGood);
+        lastBadElapsed = 0;
       }
     });
 
@@ -136,27 +172,97 @@ const processData = () => {
   return stats;
 };
 
+const timeRow = (
+  title: string,
+  valueMs: number,
+  percent?: number,
+  accessory?: JSX.Element,
+  hideBorder?: boolean
+) => {
+  const percentStr = percent ? ` (${(percent * 100).toFixed(0)}%)` : '';
+  return (
+    <StatRow style={hideBorder ? { border: 'none' } : {}}>
+      {accessory}
+      <StatTitle>{title}</StatTitle>
+      {timeMinSec(valueMs) + percentStr}
+    </StatRow>
+  );
+};
+
+const DurationRow = (
+  mode: InterventionMode | 'overall',
+  durations: any,
+  showTitle: boolean,
+  direction: 'row' | 'column'
+) => {
+  return (
+    <DataSection>
+      {showTitle && <SectionTitle>{modeSummary(mode)}</SectionTitle>}
+      <div
+        style={{
+          flexDirection: direction,
+          display: 'flex',
+          flexGrow: 1,
+          alignItems: 'center',
+        }}
+      >
+        <DataSection style={{ margin: 16, marginTop: 0 }}>
+          {timeRow(
+            `${showTitle ? 'Total' : modeSummary(mode)} Time`,
+            durations.total,
+            undefined,
+            undefined,
+            true
+          )}
+          {timeRow(
+            'Good Posture',
+            durations.good,
+            durations.good / durations.total,
+            <Dot style={{ backgroundColor: postureClassColor.good }} />
+          )}
+          {timeRow(
+            'Fair Posture',
+            durations.fair,
+            durations.fair / durations.total,
+            <Dot style={{ backgroundColor: postureClassColor.fair }} />
+          )}
+          {timeRow(
+            'Bad Posture',
+            durations.bad,
+            durations.bad / durations.total,
+            <Dot style={{ backgroundColor: postureClassColor.bad }} />
+          )}
+        </DataSection>
+        <div style={{ width: '35%' }}>
+          <Doughnut
+            data={{
+              datasets: [
+                {
+                  data: [durations.good, durations.fair, durations.bad].map(
+                    (v) => v / 1000 / 60
+                  ),
+                  backgroundColor: [
+                    postureClassColor.good,
+                    postureClassColor.fair,
+                    postureClassColor.bad,
+                  ],
+                  label: 'Time (min)',
+                },
+              ],
+            }}
+            style={{ paddingRight: 16, paddingBottom: 16 }}
+          />
+        </div>
+      </div>
+    </DataSection>
+  );
+};
+
 const Stats = (props: { hide: () => void }) => {
   const [stats, setStats] = useState<any>(undefined);
   useEffect(() => {
     setStats(processData());
   }, []);
-
-  const timeRow = (
-    title: string,
-    valueMs: number,
-    percent?: number,
-    accessory?: JSX.Element
-  ) => {
-    const percentStr = percent ? ` (${(percent * 100).toFixed(0)}%)` : '';
-    return (
-      <StatRow>
-        {accessory}
-        <StatTitle>{title}</StatTitle>
-        {timeMinSec(valueMs) + percentStr}
-      </StatRow>
-    );
-  };
 
   const statRow = (title: string, value: string) => {
     return (
@@ -181,6 +287,18 @@ const Stats = (props: { hide: () => void }) => {
         .filter((a) => a.value > 0)
         .sort((a, b) => b.value - a.value)
     : [];
+
+  const baseModes: (InterventionMode | 'overall')[] = [
+    'off',
+    'visual',
+    'haptic',
+    'extreme',
+    'all',
+  ];
+  const timeDisplayModes = stats
+    ? baseModes.filter((m) => stats.durations[m].total > 0 || m === 'overall')
+    : [];
+
   return (
     <AbsoluteContainer>
       <Header>
@@ -209,49 +327,48 @@ const Stats = (props: { hide: () => void }) => {
           }}
         >
           <DataWrapper>
-            <DataSection>
-              <SectionTitle>Time Spent</SectionTitle>
-              {timeRow('Total Time', stats.durations.total)}
-              {timeRow(
-                'Good Posture',
-                stats.durations.good,
-                stats.durations.good / stats.durations.total,
-                <Dot style={{ backgroundColor: postureClassColor.good }} />
-              )}
-              {timeRow(
-                'Fair Posture',
-                stats.durations.fair,
-                stats.durations.fair / stats.durations.total,
-                <Dot style={{ backgroundColor: postureClassColor.fair }} />
-              )}
-              {timeRow(
-                'Bad Posture',
-                stats.durations.bad,
-                stats.durations.bad / stats.durations.total,
-                <Dot style={{ backgroundColor: postureClassColor.bad }} />
-              )}
-              <Doughnut
-                data={{
-                  datasets: [
-                    {
-                      data: [
-                        stats.durations.good,
-                        stats.durations.fair,
-                        stats.durations.bad,
-                      ].map((v) => v / 1000 / 60),
-                      backgroundColor: [
-                        postureClassColor.good,
-                        postureClassColor.fair,
-                        postureClassColor.bad,
-                      ],
-                      label: 'Time (min)',
+            <TimeSectionWrapper style={{ width: '50%' }}>
+              {DurationRow('overall', stats.durations.overall, true, 'row')}
+              {/* <div style={{ flexDirection: 'row', display: 'flex' }}>
+                {timeDisplayModes.map((mode) =>
+                  DurationRow(mode, stats.durations[mode], false, 'column')
+                )}
+              </div> */}
+              <DataSection>
+                <SectionTitle>Posture by Feedback Method</SectionTitle>
+                <Bar
+                  data={{
+                    datasets: ['good', 'fair', 'bad'].map((postureClass) => ({
+                      data: timeDisplayModes.map((m) => ({
+                        x: feedbackMethodDisplay(m),
+                        y:
+                          (stats.durations[m][postureClass] /
+                            stats.durations[m].total) *
+                          100,
+                      })),
+                      backgroundColor:
+                        postureClassColor[postureClass as PostureClass],
+                      label: _.capitalize(postureClass),
+                      maxBarThickness: 70,
+                    })),
+                  }}
+                  options={{
+                    scales: {
+                      x: {
+                        stacked: true,
+                        title: { text: 'Feedback Method', display: true },
+                      },
+                      y: {
+                        stacked: true,
+                        title: { text: 'Time (%)', display: true },
+                      },
                     },
-                  ],
-                }}
-                style={{ borderTop: '1px solid #78788044' }}
-              />
-            </DataSection>
-            <DataSection>
+                  }}
+                  style={{ margin: 16 }}
+                />
+              </DataSection>
+            </TimeSectionWrapper>
+            <DataSection style={{ width: '25%' }}>
               <SectionTitle>Time to Correct Posture</SectionTitle>
               {statRow('Average', timeSec(stats.correctionTime?.average))}
               {statRow('Min', timeSec(stats.correctionTime?.min))}
@@ -272,15 +389,29 @@ const Stats = (props: { hide: () => void }) => {
                 }}
                 options={{
                   showLine: true,
+                  scales: {
+                    x: {
+                      title: {
+                        text: 'Instance of Correction',
+                        display: true,
+                      },
+                    },
+                    y: {
+                      title: { text: 'Correction Time (s)', display: true },
+                    },
+                  },
+                  plugins: {
+                    legend: { display: false },
+                  },
                 }}
                 style={{
                   padding: 8,
-                  paddingTop: 4,
+                  // paddingTop: 4,
                   borderTop: '1px solid #78788044',
                 }}
               />
             </DataSection>
-            <DataSection>
+            <DataSection style={{ width: '25%' }}>
               <SectionTitle>Bad Posture Reasons</SectionTitle>
               {statRow('Total Posture Slips', stats.badPostures.total)}
               {statRow('Sustained Slips (>7 sec)', stats.badPostures.sustained)}
@@ -311,16 +442,20 @@ const DataWrapper = styled.div`
   justify-content: center;
   width: 100%;
   max-width: 1150px;
-  padding: 0px 36px;
+  padding: 0px 8px;
 `;
 const DataSection = styled.div`
   background-color: #78788028;
   border-radius: 12px;
-  margin: 18px;
-  width: 33.33%;
+  margin: 8px 8px;
+`;
+const TimeSectionWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  /* margin-right: 18px; */
 `;
 const StatRow = styled.p`
-  font-size: 17px;
+  font-size: 16px;
   padding: 12px 12px;
   border-top: 1px solid #78788044;
   display: flex;
@@ -328,10 +463,11 @@ const StatRow = styled.p`
   align-items: center;
   margin: 0;
   font-variant: tabular-nums;
+  flex-wrap: wrap;
 `;
 const SectionTitle = styled.p`
   text-align: center;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 600;
   padding: 12px 12px;
   margin: 0px;
@@ -340,7 +476,7 @@ const StatTitle = styled.p`
   font-weight: 500;
   flex-grow: 1;
   margin: 0;
-  margin-right: 24px;
+  margin-right: 8px;
 `;
 const Dot = styled.div`
   width: 16px;

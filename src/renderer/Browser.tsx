@@ -1,34 +1,36 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { csvReady, toggleMode } from './Output';
-import { calibrate } from './Camera';
+import { calibrate, landmarksLost } from './Camera';
 import { PostureBuddyLogo } from './Welcome';
-import { InterventionMode } from './App';
+import { InterventionDisplayMode, InterventionMode } from './App';
 import _ from 'lodash';
 import IonIcon from '@reacticons/ionicons';
-import { formatUrl } from './Utils';
+import { formatUrl, transitionCSS } from './Utils';
+import { postureClassColor } from './Diagram';
 
 const HOME_PAGE = 'http://google.com';
 
-export const DISPLAY_MODES: InterventionMode[] = [
+export const DISPLAY_MODES: InterventionDisplayMode[] = [
   'auto',
   'off',
   'visual',
   'haptic',
   'all',
   'test',
-  'extreme'
+  'extreme',
 ];
 export function Broswer(props: {
-  mode: InterventionMode;
+  mode: InterventionDisplayMode;
   setMode: (m: InterventionMode) => void;
   showStats: () => void;
 }) {
   const [searchBarText, setSearchBarText] = useState('');
   const [tabs, setTabs] = useState<string[]>([
+    'https://snake.io',
     'https://docs.google.com/presentation/d/1xMgw5TA8XgQmJG4QvEATZVm8cVZTqQpXEYxCwI4bYFA/present?usp=sharing',
+    'https://www.coolmathgames.com/0-moto-x3m',
     'https://www.michigandaily.com',
-    'https://www.coolmathgames.com',
     'https://bulletin.engin.umich.edu/courses/eecs#main',
   ]);
   const [currentTab, setCurrentTab] = useState(0);
@@ -61,6 +63,8 @@ export function Broswer(props: {
       }
     }
   };
+
+  const [didCalibrate, setDidCalibrate] = useState(false);
 
   return (
     <Container>
@@ -105,6 +109,7 @@ export function Broswer(props: {
           </Button>
         </div>
         <div style={{ flexGrow: 1 }} />
+
         <Button className="btn" onClick={props.showStats}>
           <IonIcon
             name="stats-chart-outline"
@@ -112,31 +117,55 @@ export function Broswer(props: {
           />
           Stats
         </Button>
-        <Button className="btn" onClick={(event) => calibrate()}>
-          <IonIcon
-            name="scan-outline"
-            style={{ width: 18, height: 18, marginRight: 4 }}
-          />
-          Calibrate
-        </Button>
-        <Button className="btn">
-          <IonIcon
-            name="hammer-outline"
-            style={{ width: 18, height: 18, marginRight: 4 }}
-          />
-          Mode: {_.capitalize(props.mode)}
-          <ModeSelect
-            onChange={(e) =>
-              props.setMode(e.currentTarget.value as InterventionMode)
-            }
-          >
-            {DISPLAY_MODES.map((m) => (
-              <option value={m} selected={m === props.mode}>
-                {_.capitalize(m)}
-              </option>
-            ))}
-          </ModeSelect>
-        </Button>
+        {props.mode === 'paused' ? (
+          <Button style={{ backgroundColor: postureClassColor.fair }}>
+            <IonIcon
+              name="pause-circle"
+              style={{ width: 18, height: 18, marginRight: 4 }}
+            />
+            Paused
+          </Button>
+        ) : (
+          <>
+            <CalibrateButton
+              style={
+                didCalibrate ? { backgroundColor: postureClassColor.good } : {}
+              }
+              className="btn"
+              onClick={(event) => {
+                calibrate();
+                setDidCalibrate(true);
+                setTimeout(() => setDidCalibrate(false), 2000);
+              }}
+            >
+              <IonIcon
+                name={
+                  didCalibrate ? 'checkmark-circle-outline' : 'scan-outline'
+                }
+                style={{ width: 18, height: 18, marginRight: 4 }}
+              />
+              {didCalibrate ? 'Calibrated!' : 'Calibrate'}
+            </CalibrateButton>
+            <Button className="btn">
+              <IonIcon
+                name="hammer-outline"
+                style={{ width: 18, height: 18, marginRight: 4 }}
+              />
+              Mode: {_.capitalize(props.mode)}
+              <ModeSelect
+                onChange={(e) =>
+                  props.setMode(e.currentTarget.value as InterventionMode)
+                }
+              >
+                {DISPLAY_MODES.map((m) => (
+                  <option value={m} selected={m === props.mode}>
+                    {_.capitalize(m)}
+                  </option>
+                ))}
+              </ModeSelect>
+            </Button>
+          </>
+        )}
       </Header>
       <Tabs>
         {tabs.map((t, i) => (
@@ -278,6 +307,9 @@ export const Button = styled.p`
   align-items: center;
   display: flex;
   flex-direction: row;
+`;
+const CalibrateButton = styled(Button)`
+  ${transitionCSS('all 250ms ease-in')}
 `;
 const ModeSelect = styled.select`
   position: absolute;

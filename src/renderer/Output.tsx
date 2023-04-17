@@ -15,7 +15,7 @@ export const updateLastPoseArray = function (
 };
 
 export interface postureInstance {
-  Control?: string;
+  Control?: InterventionMode;
   Reason?: string;
   Time?: number;
   ZeroX?: number;
