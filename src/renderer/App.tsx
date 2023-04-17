@@ -174,7 +174,7 @@ function Hello() {
         onUpdateState={(state: PostureState | null) => {
           if (state == null) {
             clearTimeout(unPauseTimer);
-            if (!landmarksLost && !isOnboarding) {
+            if (!landmarksLost) {
               console.log(mode);
               landmarksLost = true;
               lastMode = displayMode;
